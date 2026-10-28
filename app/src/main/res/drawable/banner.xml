@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bannière Android TV (16:9, 320 x 180 dp) affichée dans la liste des
+    applications : fond sombre, halo d'accent et marque HomeHub centrée.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Fond -->
+    <path
+        android:fillColor="#FF0B0F1A"
+        android:pathData="M0,0 L320,0 L320,180 L0,180 Z" />
+    <!-- Halo diffus -->
+    <path
+        android:fillAlpha="0.18"
+        android:fillColor="@color/brand_accent"
+        android:pathData="M160,20 A70,70 0 1 1 159.9,20 Z" />
+    <!-- Pastille -->
+    <path
+        android:fillColor="@color/brand_accent"
+        android:pathData="M142,52 L178,52 A14,14 0 0 1 192,66 L192,114 A14,14 0 0 1 178,128 L142,128 A14,14 0 0 1 128,114 L128,66 A14,14 0 0 1 142,52 Z" />
+    <!-- « H » -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M145,70 L152,70 L152,110 L145,110 Z M168,70 L175,70 L175,110 L168,110 Z M152,86.5 L168,86.5 L168,93.5 L152,93.5 Z" />
+</vector>
