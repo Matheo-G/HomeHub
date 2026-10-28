@@ -1,0 +1,151 @@
+# HomeHub — intégration continue Android.
+#
+# À chaque push sur main (et sur demande manuelle) :
+#   1. installe Java 17 et le SDK Android 35 ;
+#   2. génère le Gradle wrapper s'il manque, puis le committe sur main ;
+#   3. compile l'APK release (signée avec la clé de développement du dépôt)
+#      et la publie comme artefact GitHub ;
+#   4. si les secrets de signature sont configurés, produit en plus une APK
+#      signée avec la clé de publication et la publie comme second artefact.
+#
+# Secrets optionnels (Settings → Secrets and variables → Actions) :
+#   HOMEHUB_KEYSTORE_BASE64   keystore .jks encodé en base64
+#   HOMEHUB_KEYSTORE_PASSWORD mot de passe du keystore
+#   HOMEHUB_KEY_ALIAS         alias de la clé
+#   HOMEHUB_KEY_PASSWORD      mot de passe de la clé
+
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_VERSION: "8.11.1"
+  VERSION_NAME: "1.0.0"
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAS_RELEASE_KEY: ${{ secrets.HOMEHUB_KEYSTORE_BASE64 != '' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools" > /dev/null
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Generate Gradle wrapper if missing
+        id: wrapper
+        run: |
+          if [ -f gradle/wrapper/gradle-wrapper.jar ] && [ -f gradlew ]; then
+            echo "generated=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Génération dans un dossier vide : ne dépend pas de la configuration du projet.
+          tmp="$(mktemp -d)"
+          (cd "$tmp" && touch settings.gradle && gradle wrapper --gradle-version "$GRADLE_VERSION" --distribution-type bin)
+          mkdir -p gradle/wrapper
+          cp "$tmp/gradlew" "$tmp/gradlew.bat" .
+          cp "$tmp/gradle/wrapper/gradle-wrapper.jar" gradle/wrapper/
+          chmod +x gradlew
+          echo "generated=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit Gradle wrapper
+        if: steps.wrapper.outputs.generated == 'true' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar
+          git commit -m "chore(build): ajoute le Gradle wrapper ${GRADLE_VERSION}"
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning::Wrapper non poussé (branche modifiée entre-temps)."
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Prepare APK
+        id: apk
+        run: |
+          name="HomeHub-v${VERSION_NAME}-build${GITHUB_RUN_NUMBER}.apk"
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HomeHub-release
+          path: dist/${{ steps.apk.outputs.name }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Decode release keystore
+        if: env.HAS_RELEASE_KEY == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.HOMEHUB_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/homehub-release.jks"
+
+      - name: Build signed release APK
+        if: env.HAS_RELEASE_KEY == 'true'
+        env:
+          HOMEHUB_KEYSTORE_FILE: ${{ runner.temp }}/homehub-release.jks
+          HOMEHUB_KEYSTORE_PASSWORD: ${{ secrets.HOMEHUB_KEYSTORE_PASSWORD }}
+          HOMEHUB_KEY_ALIAS: ${{ secrets.HOMEHUB_KEY_ALIAS }}
+          HOMEHUB_KEY_PASSWORD: ${{ secrets.HOMEHUB_KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease --stacktrace
+          cp app/build/outputs/apk/release/app-release.apk \
+            "dist/HomeHub-v${VERSION_NAME}-build${GITHUB_RUN_NUMBER}-signed.apk"
+
+      - name: Upload signed APK artifact
+        if: env.HAS_RELEASE_KEY == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: HomeHub-release-signed
+          path: dist/*-signed.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Remove release keystore
+        if: always() && env.HAS_RELEASE_KEY == 'true'
+        run: rm -f "$RUNNER_TEMP/homehub-release.jks"
+
+      - name: Job summary
+        run: |
+          {
+            echo "## HomeHub v${VERSION_NAME} — build ${GITHUB_RUN_NUMBER}"
+            echo ""
+            echo "APK : **${{ steps.apk.outputs.name }}** (artefact \`HomeHub-release\`, en bas de cette page)."
+            if [ "$HAS_RELEASE_KEY" = "true" ]; then
+              echo ""
+              echo "APK signée avec la clé de publication : artefact \`HomeHub-release-signed\`."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
