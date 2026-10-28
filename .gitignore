@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Clés : seule la clé de développement partagée est versionnée
+*.jks
+*.keystore
+!app/debug.keystore
+
+# Divers
+.DS_Store
+*.log
+dist/

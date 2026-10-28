@@ -1,0 +1,12 @@
+/*
+ * Fichier de build racine.
+ *
+ * Les plugins sont déclarés ici sans être appliqués (apply false) afin
+ * que tous les modules partagent exactement les mêmes versions, définies
+ * dans gradle/libs.versions.toml.
+ */
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+}
