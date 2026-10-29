@@ -14,6 +14,15 @@ HomeHub remplace l'écran d'accueil d'origine par une interface pensée pour la 
 
 ---
 
+## Documentation
+
+HomeHub évolue vers un écosystème complet (launcher TV + téléphone « cerveau » : recherche universelle, IA, widgets, agents). Tout est décrit dans [`docs/`](docs/README.md) :
+[vision](docs/vision.md) · [architecture](docs/architecture.md) · [API locale](docs/api/local-api.md) · [roadmap](docs/roadmap.md) · [ADR](docs/adr/README.md) · [guide développeur](docs/developer-guide.md) · [changelog](docs/changelog.md).
+
+Contribuer : [CONTRIBUTING.md](CONTRIBUTING.md) · Sécurité : [SECURITY.md](SECURITY.md).
+
+---
+
 ## Fonctionnalités
 
 - **Vrai launcher** : déclaré `HOME` + `DEFAULT` (candidat écran d'accueil) et `LAUNCHER` + `LEANBACK_LAUNCHER` (présent dans la liste des applications TV). Le bouton Home ramène toujours à l'accueil.

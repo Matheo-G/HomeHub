@@ -37,6 +37,16 @@ env:
   VERSION_NAME: "1.1.0"
 
 jobs:
+  docs:
+    name: Documentation
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check relative links
+        run: python3 .github/scripts/check_docs.py
+
   build:
     name: Build APK
     runs-on: ubuntu-24.04
