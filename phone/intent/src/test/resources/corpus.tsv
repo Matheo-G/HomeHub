@@ -1,0 +1,72 @@
+# Corpus du moteur d'intentions (docs/adr/0006).
+# Format : phrase<TAB>attendu. Attendus : launch:<label> · search:<requête>@<label|*> · play:<requête>@<label>
+#          key:<TOUCHE> · nav:<DESTINATION> · free
+Ouvre Netflix	launch:Netflix
+ouvre netflix	launch:Netflix
+Lance Netflix	launch:Netflix
+Lance YouTube s'il te plaît	launch:YouTube
+Mets YouTube	launch:YouTube
+Va sur Prime Video	launch:Prime Video
+Ouvre Prime	launch:Prime Video
+Ouvre Amazon Prime	launch:Prime Video
+Lance Deezer	launch:Deezer
+Démarre Plex	launch:Plex
+Ouvre l'application Plex	launch:Plex
+Netflix	launch:Netflix
+YouTube	launch:YouTube
+Peux-tu ouvrir Netflix	launch:Netflix
+Est-ce que tu peux lancer Deezer	launch:Deezer
+Je voudrais ouvrir YouTube	launch:YouTube
+Ouvre Netflix merci	launch:Netflix
+Recherche Interstellar	search:Interstellar@*
+Cherche Inception	search:Inception@*
+Cherche Stranger Things sur Netflix	search:Stranger Things@Netflix
+Recherche des recettes de crêpes sur YouTube	search:recettes de crêpes@YouTube
+Trouve Dune sur Prime Video	search:Dune@Prime Video
+Cherche les films de Christopher Nolan	search:films de Christopher Nolan@*
+Cherche Daft Punk sur Deezer	search:Daft Punk@Deezer
+Montre-moi Breaking Bad sur Netflix	search:Breaking Bad@Netflix
+Joue Daft Punk sur Deezer	play:Daft Punk@Deezer
+Mets du jazz sur YouTube	play:jazz@YouTube
+Écoute Stromae sur Deezer	play:Stromae@Deezer
+Lance Interstellar sur Plex	play:Interstellar@Plex
+Mets Friends sur Netflix	play:Friends@Netflix
+Pause	key:PLAY_PAUSE
+Mets en pause	key:PLAY_PAUSE
+Stop	key:PLAY_PAUSE
+Reprends	key:PLAY_PAUSE
+Lecture	key:PLAY_PAUSE
+Suivant	key:NEXT
+Épisode suivant	key:NEXT
+Chanson suivante	key:NEXT
+Précédent	key:PREVIOUS
+Avance rapide	key:FAST_FORWARD
+Recule	key:REWIND
+Monte le son	key:VOLUME_UP
+Augmente le volume	key:VOLUME_UP
+Plus fort	key:VOLUME_UP
+Baisse le son	key:VOLUME_DOWN
+Baisse le volume	key:VOLUME_DOWN
+Moins fort	key:VOLUME_DOWN
+Coupe le son	key:MUTE
+Mode muet	key:MUTE
+Remets le son	key:MUTE
+Retour	key:BACK
+Reviens en arrière	key:BACK
+OK	key:CENTER
+Valide	key:CENTER
+Gauche	key:LEFT
+À droite	key:RIGHT
+Accueil	nav:HOME
+Écran d'accueil	nav:HOME
+Paramètres	nav:SETTINGS
+Ouvre les paramètres	nav:SETTINGS
+Ouvre les réglages	nav:SETTINGS
+Paramètres Android	nav:ANDROID_SETTINGS
+Ouvre les paramètres de la box	nav:ANDROID_SETTINGS
+Ouvre les paramètres wifi	nav:ANDROID_SETTINGS
+Toutes les applications	nav:ALL_APPS
+Mes applis	nav:ALL_APPS
+Le seigneur des anneaux	free
+Interstellar	free
+Qui est Christopher Nolan	free
