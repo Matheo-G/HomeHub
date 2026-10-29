@@ -1,11 +1,9 @@
 /*
  * HomeHub — configuration des dépôts et des modules.
  *
- * Modules : :app (launcher TV), :remote (télécommande téléphone) et
- * :protocol (messages échangés entre les deux). Les futures briques
- * (widgets, intégrations domotique, IA…) pourront devenir des modules
- * Gradle indépendants (:feature:weather, :integration:nas…) sans toucher
- * au reste de l'arborescence.
+ * Découpage et règles de dépendance : docs/adr/0009-modularisation.md.
+ * La TV (:tv) ne dépend jamais d'un module :phone:* ; :core:* et
+ * :phone:intent sont du Kotlin pur, testables sans Android.
  */
 pluginManagement {
     repositories {
@@ -31,6 +29,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "HomeHub"
-include(":app")      // Launcher Android TV
-include(":remote")   // Télécommande pour téléphone Android
-include(":protocol") // Protocole partagé TV ↔ téléphone
+include(":tv")             // HomeHub TV : launcher Android TV (affiche et exécute)
+include(":phone")          // HomeHub Remote : application téléphone (le cerveau)
+include(":phone:intent")   // Moteur d'intentions, Kotlin pur
+include(":core:protocol")  // Protocole local v2 (JSON-RPC 2.0), Kotlin pur
