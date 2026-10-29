@@ -46,6 +46,7 @@ import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Keyboard
+import androidx.compose.material.icons.automirrored.rounded.ManageSearch
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SettingsRemote
@@ -110,6 +111,12 @@ fun RemoteMainScreen(
     val voice by viewModel.voice.collectAsStateWithLifecycle()
     val banner by viewModel.banner.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(RemoteTab.Remote) }
+    var showSources by rememberSaveable { mutableStateOf(false) }
+
+    if (showSources) {
+        SourcesScreen(viewModel = viewModel, onBack = { showSources = false }, modifier = modifier)
+        return
+    }
 
     val connected = connection as? ConnectionState.Connected
     val reconnecting = connection is ConnectionState.Connecting
@@ -125,6 +132,7 @@ fun RemoteMainScreen(
                 boxName = boxName,
                 reconnecting = reconnecting,
                 onChangeBox = viewModel::changeBox,
+                onOpenSources = { showSources = true },
             )
             ResultBanner(banner, Modifier.padding(horizontal = 20.dp))
             Spacer(Modifier.height(10.dp))
@@ -170,7 +178,7 @@ fun RemoteMainScreen(
 }
 
 @Composable
-private fun Header(boxName: String, reconnecting: Boolean, onChangeBox: () -> Unit) {
+private fun Header(boxName: String, reconnecting: Boolean, onChangeBox: () -> Unit, onOpenSources: () -> Unit) {
     val dotColor by animateColorAsState(if (reconnecting) RemoteColors.Danger else RemoteColors.Success, label = "dot")
     Row(
         modifier = Modifier
@@ -200,6 +208,9 @@ private fun Header(boxName: String, reconnecting: Boolean, onChangeBox: () -> Un
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+        IconButton(onClick = onOpenSources) {
+            Icon(Icons.AutoMirrored.Rounded.ManageSearch, contentDescription = "Sources de recherche", tint = RemoteColors.TextSecondary)
         }
         IconButton(onClick = onChangeBox) {
             Icon(Icons.Rounded.SwapHoriz, contentDescription = "Changer de TV", tint = RemoteColors.TextSecondary)

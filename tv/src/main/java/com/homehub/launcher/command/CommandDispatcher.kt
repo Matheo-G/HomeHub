@@ -24,6 +24,7 @@ class CommandDispatcher(
     private val apps: AppHandler,
     private val navigation: NavigationHandler,
     private val feedback: FeedbackHandler,
+    private val cards: CardHandler,
 ) {
     suspend fun dispatch(command: TvCommand, origin: CommandOrigin): CommandResult =
         withContext(Dispatchers.Main.immediate) {
@@ -37,6 +38,9 @@ class CommandDispatcher(
                     is TvCommand.OpenStore -> apps.openStore(command)
                     is TvCommand.Navigate -> navigation.navigate(command)
                     is TvCommand.ShowToast -> feedback.toast(command)
+                    is TvCommand.ShowCards -> cards.show(command)
+                    is TvCommand.UpdateCards -> cards.update(command)
+                    is TvCommand.DismissCards -> cards.dismiss(command)
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation

@@ -1,0 +1,9 @@
+{
+  "method": "cards.dismiss",
+  "params": {
+    "surfaceId": "search-1"
+  },
+  "result": {
+    "dismissed": true
+  }
+}

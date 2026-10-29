@@ -116,7 +116,7 @@ jobs:
       - name: Unit and contract tests
         run: |
           set -o pipefail
-          ./gradlew :core:protocol:test :phone:intent:test :tv:testReleaseUnitTest --stacktrace 2>&1 | tee build.log
+          ./gradlew :core:protocol:test :phone:intent:test :phone:sources:test :tv:testReleaseUnitTest --stacktrace 2>&1 | tee build.log
           # Résumé visible sur la page du build : nombre de tests réellement exécutés.
           python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import glob, xml.etree.ElementTree as ET

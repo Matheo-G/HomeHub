@@ -110,7 +110,28 @@ class RemoteViewModel(application: Application) : AndroidViewModel(application) 
     private var textJob: Job? = null
     private var lastHintAt = 0L
 
+    // --- Sources de recherche -------------------------------------------------
+
+    /** Vrai si une clé TMDB est enregistrée (la clé elle-même ne quitte pas le coffre). */
+    val tmdbConfigured: StateFlow<Boolean> = container.secrets.tmdbKey
+        .map { !it.isNullOrBlank() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, !container.secrets.tmdbKey.value.isNullOrBlank())
+
+    /** Vérifie la clé auprès de TMDB puis l'enregistre chiffrée ; `false` si refusée. */
+    suspend fun saveTmdbKey(value: String): Boolean {
+        val candidate = value.trim()
+        if (candidate.isEmpty() || !container.tmdb.verify(candidate)) return false
+        container.secrets.setTmdbKey(candidate)
+        return true
+    }
+
+    fun clearTmdbKey() = container.secrets.setTmdbKey(null)
+
     init {
+        // Le moteur de recherche connaît les applications de la TV.
+        viewModelScope.launch { appsState.collect { container.tvApps = it } }
+        // Actions et fermetures de cartes sur la TV : le téléphone décide de la suite.
+        viewModelScope.launch { client.events.collect { container.search.onEvent(it) } }
         // À chaque nouvelle session authentifiée : liste des applications de la TV.
         viewModelScope.launch {
             client.state

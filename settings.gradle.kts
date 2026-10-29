@@ -32,4 +32,5 @@ rootProject.name = "HomeHub"
 include(":tv")             // HomeHub TV : launcher Android TV (affiche et exécute)
 include(":phone")          // HomeHub Remote : application téléphone (le cerveau)
 include(":phone:intent")   // Moteur d'intentions, Kotlin pur
+include(":phone:sources")  // Recherche universelle (TMDB, applications), Kotlin pur
 include(":core:protocol")  // Protocole local v2 (JSON-RPC 2.0), Kotlin pur

@@ -372,7 +372,8 @@ Règles d'implémentation TV : animations lues en phase de dessin (aucune recomp
 | Couche de commandes | Gestionnaire réseau ad hoc | `CommandDispatcher` unique | ✅ 0.3.0-alpha.1 — réseau et interface locale passent par la même couche |
 | Interprétation vocale | Sur la TV | Sur le téléphone (`:phone:intent`) | ✅ 0.3.0-alpha.1 — la TV ne reçoit plus que des commandes |
 | Modules | `:app`, `:remote`, `:protocol` | `:tv`, `:phone`, `:phone:intent`, `:core:protocol` | ✅ 0.3.0-alpha.1 — `applicationId` inchangés ; `:phone:ai`, `:phone:sources` arrivent avec leurs fonctionnalités |
-| Rendu de réponses | Bandeau de confirmation | Moteur de cartes | ⏳ Lot 3.4 (résultats) puis V4 (réponses IA) |
+| Rendu de réponses | Bandeau de confirmation | Moteur de cartes | ✅ 0.3.0-alpha.2 pour les résultats de recherche ; réponses IA en V4 |
+| Recherche universelle | Recherche globale du système | Sources sur le téléphone + cartes TV | ✅ 0.3.0-alpha.2 (TMDB, applications, « Chercher dans… ») ; YouTube et Plex au lot 3.3b |
 | Analyse statique | — | ktlint + detekt | ⏳ Lot 3.1b |
 | Versions | TV `1.1.0`, téléphone `1.0.0` | `0.3.0` à la V3 | ✅ Version unique `0.3.0-alpha.1` ; `versionCode` croissants, aucune désinstallation nécessaire |
 

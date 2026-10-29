@@ -1,0 +1,8 @@
+{
+  "event": "card.action",
+  "params": {
+    "surfaceId": "search-1",
+    "cardId": "tmdb:movie:157336",
+    "actionId": "watch"
+  }
+}

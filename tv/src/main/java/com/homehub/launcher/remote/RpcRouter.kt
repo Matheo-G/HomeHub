@@ -13,6 +13,9 @@ import com.homehub.protocol.Applied
 import com.homehub.protocol.AuthResult
 import com.homehub.protocol.BoxInfo
 import com.homehub.protocol.Capabilities
+import com.homehub.protocol.CardsDismissResult
+import com.homehub.protocol.CardsShowResult
+import com.homehub.protocol.CardsUpdateResult
 import com.homehub.protocol.Empty
 import com.homehub.protocol.ErrorCodes
 import com.homehub.protocol.HelloResult
@@ -66,7 +69,12 @@ class RpcRouter(
                 authRequired = true,
                 pairingOpen = pairingManager.isPairingOpen,
                 box = boxInfo(),
-                capabilities = listOf(Capabilities.INPUT_FULL_CONTROL, Capabilities.APP_OPEN, Capabilities.UI_TOAST),
+                capabilities = listOf(
+                    Capabilities.INPUT_FULL_CONTROL,
+                    Capabilities.APP_OPEN,
+                    Capabilities.UI_TOAST,
+                    Capabilities.CARDS,
+                ),
             )
         }
         on(Methods.SessionAuth) { session, params ->
@@ -135,6 +143,20 @@ class RpcRouter(
         on(Methods.UiToast) { _, params ->
             execute(TvCommand.ShowToast(params.message, params.title, params.kind))
             Empty
+        }
+
+        // --- Cartes ----------------------------------------------------------
+        on(Methods.CardsShow) { _, params ->
+            execute(TvCommand.ShowCards(params.surface))
+            CardsShowResult(true)
+        }
+        on(Methods.CardsUpdate) { _, params ->
+            execute(TvCommand.UpdateCards(params.surfaceId, params.patch))
+            CardsUpdateResult(true)
+        }
+        on(Methods.CardsDismiss) { _, params ->
+            execute(TvCommand.DismissCards(params.surfaceId))
+            CardsDismissResult(true)
         }
     }
 

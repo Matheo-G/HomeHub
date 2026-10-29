@@ -1,5 +1,7 @@
 package com.homehub.launcher.command
 
+import com.homehub.protocol.CardPatch
+import com.homehub.protocol.CardSurface
 import com.homehub.protocol.Destination
 import com.homehub.protocol.OpenIntent
 import com.homehub.protocol.RemoteKey
@@ -28,6 +30,11 @@ sealed interface TvCommand {
     data class OpenStore(val packageName: String) : TvCommand
     data class Navigate(val destination: Destination) : TvCommand
     data class ShowToast(val message: String, val title: String?, val kind: ToastKind) : TvCommand
+
+    /** Affiche une surface de cartes (résultats, réponse…) ; ramène HomeHub au premier plan. */
+    data class ShowCards(val surface: CardSurface) : TvCommand
+    data class UpdateCards(val surfaceId: String, val patch: CardPatch) : TvCommand
+    data class DismissCards(val surfaceId: String) : TvCommand
 }
 
 /** Provenance d'une commande (journalisation, règles futures d'automatisation). */

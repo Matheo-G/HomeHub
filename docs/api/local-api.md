@@ -1,6 +1,6 @@
 # API locale HomeHub — protocole v2
 
-> Statut : **v2 implémentée depuis 0.3.0-alpha.1** pour `session.*`, `input.*`, `app.*` et `ui.*` (capacités `input.fullControl`, `app.open`, `ui.toast`). `cards.*` (lot 3.4), `widgets.*` (V5), `notifications.*` et `settings.*` sont spécifiées mais pas encore annoncées par la TV.
+> Statut : **v2 implémentée** — `session.*`, `input.*`, `app.*`, `ui.*` depuis 0.3.0-alpha.1 ; `cards.*` et les événements `card.action` / `cards.dismissed` depuis 0.3.0-alpha.2 (capacités `input.fullControl`, `app.open`, `ui.toast`, `cards`). `widgets.*` (V5), `notifications.*` et `settings.*` sont spécifiées mais pas encore annoncées par la TV.
 > Code : `core/protocol` (types partagés), `tv/.../remote/RpcRouter.kt` (serveur), `phone/.../data/RemoteClient.kt` (client).
 > Décision : [ADR-0003](../adr/0003-protocole-json-rpc-websocket.md). Sécurité : [ADR-0004](../adr/0004-appairage-et-securite.md).
 
@@ -185,11 +185,14 @@ Schéma d'une carte :
 | `kind` | `answer` · `web` · `video` · `music` · `app` · `person` · `weather` · `widget` · `notification` | oui |
 | `title` | chaîne | oui |
 | `subtitle`, `body` | chaîne | non |
-| `image` | `{ "url" \| "png", "ratio": "16:9" \| "2:3" \| "1:1" }` | non |
+| `image` | `{ "data": "<Base64 JPEG/PNG ≤ 60 Ko>", "app": "<package installé>", "ratio": "16:9" \| "2:3" \| "1:1" }` | non |
 | `badges` | chaînes | non |
-| `actions` | `[{ "id", "label", "command": { "method", "params" } }]` | non |
+| `actions` | `[{ "id", "label" }]` — la première est l'action principale (bouton OK) | non |
+| `section` | rangée d'affichage sur la TV (« Films et séries », « Chercher dans… ») | non |
 
-Une action de carte ne peut référencer qu'une méthode publique de cette API. Un `kind` inconnu est rendu par la carte générique.
+La TV n'accède jamais à Internet : une image est soit envoyée par le téléphone (`data`), soit l'illustration d'une application installée (`app`). Pour afficher vite, le téléphone envoie d'abord les cartes sans image puis une `cards.update` (`replaceCards`) par affiche.
+
+Activer une action sur la TV produit l'événement `card.action` : **le téléphone décide** de la suite (ouvrir Netflix, chercher sur YouTube…), conformément à l'[ADR-0002](../adr/0002-ecosysteme-tv-telephone.md). Un `kind` inconnu est rendu par la carte générique (`generic`).
 
 ### 4.4 Widgets — `widgets.*`
 
@@ -230,8 +233,8 @@ La TV met en cache la dernière carte de chaque widget (affichage sans télépho
 | Événement | Paramètres | Quand |
 |---|---|---|
 | `session.status` | `fullControl`, `pairingOpen` | À chaque changement, aux téléphones authentifiés |
-| `card.action` | `surfaceId`, `cardId`, `actionId` | L'utilisateur active une action de carte **sans commande attachée** (le téléphone décide) |
-| `cards.dismissed` | `surfaceId`, `reason` : `user` · `timeout` · `replaced` | Une surface disparaît |
+| `card.action` | `surfaceId`, `cardId`, `actionId` | L'utilisateur active une action de carte (OK) ; le téléphone décide de la suite |
+| `cards.dismissed` | `surfaceId`, `reason` : `user` · `timeout` · `replaced` | Une surface disparaît (pas d'événement pour une fermeture demandée par `cards.dismiss`) |
 | `tv.foreground` | `package` | L'application au premier plan change (contrôle complet requis, utilisé pour le contexte des intentions) |
 
 ## 6. Erreurs

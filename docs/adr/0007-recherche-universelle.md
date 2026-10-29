@@ -42,3 +42,7 @@ interface SearchSource {
 - ⚠️ La disponibilité vient de TMDB (données JustWatch) : peut avoir quelques jours de retard ; mention de la source affichée, comme l'exigent les conditions de TMDB.
 - ⚠️ L'ouverture « directement sur le film » dépend de chaque application ; le repli garantit au minimum l'arrivée dans la bonne application.
 - ⚠️ Quotas d'API (YouTube notamment) : cache des résultats sur le téléphone.
+
+## Amendement — 2026-10-29 (0.3.0-alpha.2)
+
+Première livraison : `TmdbSource` (clé saisie par l'utilisateur, coffre chiffré) et `InstalledAppsSource`. `YouTubeSource` (clé et quota YouTube Data API) et `PlexSource` (jeton du serveur) sont reportées au lot 3.3b. En attendant, chaque recherche propose des cartes « Chercher dans… » (Netflix, YouTube, Prime Video, Plex, Disney+) qui lancent la recherche **dans** l'application installée : la promesse « chercher sur Netflix, Plex, Prime Video et YouTube » est tenue sans clé supplémentaire. Ouvrir un film « Disponible sur Netflix » lance la recherche du titre dans Netflix (TMDB ne fournit pas les identifiants internes des services).

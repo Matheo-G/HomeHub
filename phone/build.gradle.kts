@@ -97,6 +97,8 @@ kotlin {
 dependencies {
     implementation(project(":core:protocol"))
     implementation(project(":phone:intent"))
+    implementation(project(":phone:sources"))
+    implementation(libs.androidx.security.crypto)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
 

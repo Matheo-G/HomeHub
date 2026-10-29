@@ -2,6 +2,7 @@ package com.homehub.remote.planner
 
 import com.homehub.intent.AppRef
 import com.homehub.intent.UserIntent
+import com.homehub.protocol.Capabilities
 import com.homehub.protocol.ErrorCodes
 import com.homehub.protocol.KeyParams
 import com.homehub.protocol.LaunchParams
@@ -13,6 +14,7 @@ import com.homehub.protocol.RpcException
 import com.homehub.protocol.TextParams
 import com.homehub.protocol.ToastKind
 import com.homehub.protocol.ToastParams
+import com.homehub.remote.data.ConnectionState
 import com.homehub.remote.data.RemoteClient
 import kotlinx.coroutines.delay
 
@@ -26,7 +28,10 @@ data class Outcome(val ok: Boolean, val message: String)
  * (docs/adr/0002) : quelle méthode appeler, quel repli tenter, quel message
  * afficher. La TV se contente d'exécuter.
  */
-class IntentExecutor(private val client: RemoteClient) {
+class IntentExecutor(
+    private val client: RemoteClient,
+    private val search: SearchCoordinator,
+) {
 
     suspend fun execute(intent: UserIntent): Outcome = try {
         when (intent) {
@@ -70,7 +75,18 @@ class IntentExecutor(private val client: RemoteClient) {
                 Outcome(true, "${app.label} ouvert : utilisez sa recherche et le clavier du téléphone")
             }
         }
-        return freeText(query)
+        return universalSearch(query)
+    }
+
+    /**
+     * Recherche universelle en cartes sur la TV (lot 3.3/3.4) ; recherche
+     * globale du système si la TV ne sait pas encore afficher de cartes.
+     */
+    private suspend fun universalSearch(query: String): Outcome {
+        val connected = client.state.value as? ConnectionState.Connected
+        if (connected != null && Capabilities.CARDS in connected.capabilities) return search.search(query)
+        client.call(Methods.AppOpen, OpenParams(packageName = null, intent = OpenIntent.SEARCH, query = query))
+        return Outcome(true, "Recherche de « $query »")
     }
 
     private suspend fun play(query: String, app: AppRef?): Outcome {
@@ -95,8 +111,8 @@ class IntentExecutor(private val client: RemoteClient) {
     }
 
     /**
-     * Texte libre : saisi dans le champ actif de la TV s'il y en a un,
-     * sinon recherche globale de la TV.
+     * Texte libre : saisi dans le champ actif de la TV s'il y en a un
+     * (l'utilisateur dicte dans la recherche de Netflix…), sinon recherche universelle.
      */
     private suspend fun freeText(text: String): Outcome {
         try {
@@ -105,8 +121,7 @@ class IntentExecutor(private val client: RemoteClient) {
         } catch (error: RpcException) {
             if (error.code != ErrorCodes.NO_TEXT_FIELD && error.code != ErrorCodes.FULL_CONTROL_REQUIRED) throw error
         }
-        client.call(Methods.AppOpen, OpenParams(packageName = null, intent = OpenIntent.SEARCH, query = text))
-        return Outcome(true, "Recherche de « $text »")
+        return universalSearch(text)
     }
 
     private companion object {

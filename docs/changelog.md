@@ -4,6 +4,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage :
 
 ## [Non publié]
 
+## [0.3.0-alpha.2] — 2026-10-29 · V3, lots 3.3 et 3.4 — Recherche universelle
+
+### Ajouté
+- « Recherche Interstellar » (ou toute phrase non reconnue) affiche sur la TV des **cartes de résultats** : films et séries avec affiche, année, résumé et services où ils sont disponibles en France ; personnes ; applications ; et « Chercher dans… » Netflix, YouTube, Prime Video, Plex, Disney+.
+- OK sur une carte : le téléphone ouvre le bon service et y lance la recherche du titre (ou la bande-annonce sur YouTube si aucun service installé ne le propose).
+- Téléphone : module `:phone:sources` (TMDB, applications installées, agrégation parallèle), écran « Sources de recherche » avec clé TMDB vérifiée et chiffrée (Android Keystore).
+- TV : moteur de cartes (`cards.show/update/dismiss`, événements `card.action` / `cards.dismissed`), chargement animé, détail de la carte focalisée, fermeture par Retour ou après 2 minutes.
+- Tests : contrat des cartes et événements, état des cartes TV, sources sur serveur TMDB simulé.
+
+### Modifié
+- Sauvegarde Android désactivée sur le téléphone (jetons et clés chiffrés liés à l'appareil).
+
 ## [0.3.0-alpha.1] — 2026-10-29 · V3, lots 3.1 et 3.2
 
 > ⚠️ Mettez à jour **la TV et le téléphone ensemble** : le protocole v1 n'est plus pris en charge. Les associations existantes sont conservées.
