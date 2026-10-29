@@ -127,7 +127,7 @@ class RemoteControlService : Service() {
             combine(AccessibilityBridge.connected, container.pairingManager.pairingPin) { full, pin ->
                 SessionStatus(fullControl = full, pairingOpen = pin != null)
             }.drop(1).collect { status ->
-                rpcServer.broadcast(JsonRpc.event(Events.Status, status))
+                rpcServer.sendToPaired(JsonRpc.event(Events.Status, status))
             }
         }
     }

@@ -61,7 +61,7 @@ class RpcServer(
     }
 
     /** Envoie une trame (événement) à tous les téléphones authentifiés. */
-    fun broadcast(text: String) {
+    fun sendToPaired(text: String) {
         connections.forEach { connection ->
             val state = connection.getAttachment<Connection>() ?: return@forEach
             if (state.session.authenticated && connection.isOpen) runCatching { connection.send(text) }
