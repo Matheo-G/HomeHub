@@ -34,7 +34,6 @@ concurrency:
 
 env:
   GRADLE_VERSION: "8.11.1"
-  VERSION_NAME: "1.1.0"
 
 jobs:
   docs:
@@ -111,15 +110,18 @@ jobs:
           git commit -m "chore(build): ajoute le Gradle wrapper ${GRADLE_VERSION}"
           git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning::Wrapper non poussé (branche modifiée entre-temps)."
 
-      - name: Unit tests
+      - name: Read version
+        run: echo "VERSION_NAME=$(grep '^homehub.version=' gradle.properties | cut -d= -f2)" >> "$GITHUB_ENV"
+
+      - name: Unit and contract tests
         run: |
           set -o pipefail
-          ./gradlew :app:testReleaseUnitTest --stacktrace 2>&1 | tee build.log
+          ./gradlew :core:protocol:test :phone:intent:test :tv:testReleaseUnitTest --stacktrace 2>&1 | tee build.log
           # Résumé visible sur la page du build : nombre de tests réellement exécutés.
           python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import glob, xml.etree.ElementTree as ET
           total = failures = 0
-          for path in glob.glob("app/build/test-results/testReleaseUnitTest/*.xml"):
+          for path in glob.glob("**/build/test-results/**/*.xml", recursive=True):
               root = ET.parse(path).getroot()
               total += int(root.get("tests", 0))
               failures += int(root.get("failures", 0)) + int(root.get("errors", 0))
@@ -131,7 +133,7 @@ jobs:
       - name: Build release APKs (TV + téléphone)
         run: |
           set -o pipefail
-          ./gradlew :app:assembleRelease :remote:assembleRelease --stacktrace 2>&1 | tee build.log
+          ./gradlew :tv:assembleRelease :phone:assembleRelease --stacktrace 2>&1 | tee build.log
 
       - name: Report build errors
         if: failure()
@@ -149,8 +151,23 @@ jobs:
       - name: Prepare APKs
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/HomeHub-TV.apk
-          cp remote/build/outputs/apk/release/remote-release.apk dist/HomeHub-Remote.apk
+          cp tv/build/outputs/apk/release/tv-release.apk dist/HomeHub-TV.apk
+          cp phone/build/outputs/apk/release/phone-release.apk dist/HomeHub-Remote.apk
+
+      - name: Check APK size budgets
+        run: |
+          # Budgets : docs/architecture.md §11 (TV < 3 Mo, téléphone < 8 Mo).
+          check() {
+            size=$(stat -c %s "$1")
+            echo "$1 : $((size / 1024)) Kio (budget $(( $2 / 1024 )) Kio)"
+            echo "| $(basename "$1") | $((size / 1024)) Kio | $(( $2 / 1024 )) Kio |" >> sizes.md
+            if [ "$size" -gt "$2" ]; then echo "::error title=Budget de taille::$1 dépasse le budget"; return 1; fi
+          }
+          echo "| APK | Taille | Budget |" > sizes.md
+          echo "|---|---|---|" >> sizes.md
+          check dist/HomeHub-TV.apk $((3 * 1024 * 1024))
+          check dist/HomeHub-Remote.apk $((8 * 1024 * 1024))
+          cat sizes.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload TV APK artifact
         uses: actions/upload-artifact@v4
@@ -182,10 +199,10 @@ jobs:
           HOMEHUB_KEY_ALIAS: ${{ secrets.HOMEHUB_KEY_ALIAS }}
           HOMEHUB_KEY_PASSWORD: ${{ secrets.HOMEHUB_KEY_PASSWORD }}
         run: |
-          ./gradlew :app:assembleRelease :remote:assembleRelease --stacktrace
+          ./gradlew :tv:assembleRelease :phone:assembleRelease --stacktrace
           mkdir -p dist/signed
-          cp app/build/outputs/apk/release/app-release.apk dist/signed/HomeHub-TV.apk
-          cp remote/build/outputs/apk/release/remote-release.apk dist/signed/HomeHub-Remote.apk
+          cp tv/build/outputs/apk/release/tv-release.apk dist/signed/HomeHub-TV.apk
+          cp phone/build/outputs/apk/release/phone-release.apk dist/signed/HomeHub-Remote.apk
 
       - name: Upload signed APK artifact
         if: env.HAS_RELEASE_KEY == 'true'
@@ -212,7 +229,7 @@ jobs:
           gh release delete latest --cleanup-tag --yes 2>/dev/null || true
           gh release create latest $files \
             --target "$GITHUB_SHA" \
-            --title "HomeHub v${VERSION_NAME} — build ${GITHUB_RUN_NUMBER}" \
+            --title "HomeHub ${VERSION_NAME} — build ${GITHUB_RUN_NUMBER}" \
             --latest \
             --notes "Dernière version compilée automatiquement depuis \`main\` ($(git rev-parse --short HEAD)).
 
@@ -224,7 +241,7 @@ jobs:
       - name: Job summary
         run: |
           {
-            echo "## HomeHub v${VERSION_NAME} — build ${GITHUB_RUN_NUMBER}"
+            echo "## HomeHub ${VERSION_NAME} — build ${GITHUB_RUN_NUMBER}"
             echo ""
             echo "- Launcher TV : artefact \`HomeHub-release\` (HomeHub-TV.apk)"
             echo "- Télécommande téléphone : artefact \`HomeHub-Remote\` (HomeHub-Remote.apk)"

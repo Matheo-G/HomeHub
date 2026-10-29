@@ -4,6 +4,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage :
 
 ## [Non publié]
 
+## [0.3.0-alpha.1] — 2026-10-29 · V3, lots 3.1 et 3.2
+
+> ⚠️ Mettez à jour **la TV et le téléphone ensemble** : le protocole v1 n'est plus pris en charge. Les associations existantes sont conservées.
+
+### Ajouté
+- Protocole local v2 : JSON-RPC 2.0 sur WebSocket, module partagé `:core:protocol` (kotlinx.serialization), tests de contrat sur des exemples JSON.
+- TV : couche de commandes unique (`CommandDispatcher`, handlers par domaine) utilisée par le réseau et par l'interface ; `app.open` avec replis (recherche dans l'application, ouverture simple, recherche globale) ; limitation de débit par session.
+- Téléphone : moteur d'intentions `:phone:intent` et planificateur `IntentExecutor` — la phrase dictée est comprise sur le téléphone, la TV n'exécute que des commandes ; corpus de 69 phrases mesuré à chaque build.
+- CI : tests du protocole, du moteur d'intentions et de la TV ; budgets de taille des APK (TV < 3 Mo, téléphone < 8 Mo).
+
+### Modifié
+- Modules renommés `:tv`, `:phone`, `:phone:intent`, `:core:protocol` ; identifiants d'application inchangés.
+- Version unique des deux applications (`homehub.version`) ; numérotation 0.x jusqu'à la V10.
+
+### Supprimé
+- Protocole v1 (TCP) et interprétation vocale sur la TV.
+
+## [0.2.1] — 2026-10-29 · Documentation
+
 ### Ajouté
 - Documentation de référence : vision produit, architecture cible, API locale v2 (JSON-RPC 2.0 sur WebSocket), roadmap V1 → V10, guide développeur, 11 décisions d'architecture (ADR).
 - Modèles d'issues et de pull requests, `CONTRIBUTING.md`, `SECURITY.md`.
@@ -32,5 +51,3 @@ Publiée sous le numéro **1.0.0**.
 - Paramètres persistants : couleur d'accent, fond d'écran, taille des cartes.
 - CI GitHub Actions : APK release à chaque push sur `main`.
 
-[Non publié]: https://github.com/Matheo-G/HomeHub/compare/latest...HEAD
-[0.2.0]: https://github.com/Matheo-G/HomeHub/releases/tag/latest

@@ -1,6 +1,7 @@
 # API locale HomeHub — protocole v2
 
-> Statut : **spécification v2 (cible V3)**. La V2 utilise le protocole v1 décrit en [annexe](#annexe--protocole-v1-legacy).
+> Statut : **v2 implémentée depuis 0.3.0-alpha.1** pour `session.*`, `input.*`, `app.*` et `ui.*` (capacités `input.fullControl`, `app.open`, `ui.toast`). `cards.*` (lot 3.4), `widgets.*` (V5), `notifications.*` et `settings.*` sont spécifiées mais pas encore annoncées par la TV.
+> Code : `core/protocol` (types partagés), `tv/.../remote/RpcRouter.kt` (serveur), `phone/.../data/RemoteClient.kt` (client).
 > Décision : [ADR-0003](../adr/0003-protocole-json-rpc-websocket.md). Sécurité : [ADR-0004](../adr/0004-appairage-et-securite.md).
 
 ## 1. Transport
@@ -94,12 +95,14 @@ Résultat :
 {
   "protocol": 2,
   "authRequired": true,
+  "pairingOpen": false,
   "box": { "id": "5f0c…", "name": "Mi Box", "model": "MIBOX3", "sdk": 28, "version": "0.3.0" },
   "capabilities": ["cards", "widgets", "notifications", "input.fullControl"]
 }
 ```
 
 `capabilities` annonce ce que cette TV sait faire : le téléphone adapte ses commandes (ex. pas de `widgets.update` si absent).
+`pairingOpen` indique si l'écran d'appairage est affiché : un téléphone non appairé rappelle `session.hello` toutes les 2,5 s pour passer de lui-même à la saisie du code dès son ouverture.
 
 ### `session.auth`
 
@@ -143,7 +146,7 @@ Touches : `UP`, `DOWN`, `LEFT`, `RIGHT`, `CENTER`, `BACK`, `HOME`, `PLAY_PAUSE`,
 | `app.launch` | `package` | `{ "launched": true }` |
 | `app.open` | `package` (facultatif), `intent` : `view` · `search` · `playFromSearch`, `uri`, `query` | `{ "opened": true, "fallback": "launched" }` |
 
-`app.open` essaie l'intention demandée puis se replie sur l'ouverture simple de l'application ; `fallback` indique ce qui a réellement été fait. C'est la méthode derrière `playMusic()` (`intent: "playFromSearch"`) et l'ouverture d'un résultat de recherche (`intent: "view"`).
+`app.open` essaie l'intention demandée puis se replie (recherche dans l'application, puis simple ouverture) ; `fallback` indique ce qui a réellement été fait (`"search"`, `"launched"`). Sans `package`, `intent: "search"` lance la recherche globale de la TV. C'est la méthode derrière `playMusic()` (`intent: "playFromSearch"`) et l'ouverture d'un résultat de recherche (`intent: "view"`).
 
 ### 4.3 Cartes — `cards.*`
 
@@ -212,8 +215,8 @@ La TV met en cache la dernière carte de chaque widget (affichage sans télépho
 
 | Méthode | Paramètres | Résultat |
 |---|---|---|
-| `ui.navigate` | `destination` : `home` · `allApps` · `settings` | `{ "navigated": true }` |
-| `ui.toast` | `message`, `kind` : `info` · `success` · `error` | `{}` |
+| `ui.navigate` | `destination` : `home` · `allApps` · `settings` · `androidSettings` | `{ "navigated": true }` |
+| `ui.toast` | `message`, `title` (phrase prononcée, facultatif), `kind` : `info` · `success` · `error` | `{}` |
 
 ### 4.7 Réglages — `settings.*`
 
@@ -226,7 +229,7 @@ La TV met en cache la dernière carte de chaque widget (affichage sans télépho
 
 | Événement | Paramètres | Quand |
 |---|---|---|
-| `session.status` | `fullControl`, `pairingOpen` | Après authentification et à chaque changement |
+| `session.status` | `fullControl`, `pairingOpen` | À chaque changement, aux téléphones authentifiés |
 | `card.action` | `surfaceId`, `cardId`, `actionId` | L'utilisateur active une action de carte **sans commande attachée** (le téléphone décide) |
 | `cards.dismissed` | `surfaceId`, `reason` : `user` · `timeout` · `replaced` | Une surface disparaît |
 | `tv.foreground` | `package` | L'application au premier plan change (contrôle complet requis, utilisé pour le contexte des intentions) |
@@ -257,7 +260,7 @@ La TV met en cache la dernière carte de chaque widget (affichage sans télépho
 - La version majeure du protocole (`protocol`) ne change qu'en cas de rupture ; une TV annonce dans le TXT DNS-SD toutes les versions qu'elle accepte.
 - Au sein d'une version : on peut **ajouter** méthodes, champs, valeurs d'énumération, événements ; on ne peut **ni retirer ni renommer**.
 - Chaque ajout est signalé par une **capacité** dans `session.hello` pour que le téléphone ne l'utilise qu'avec une TV qui la connaît.
-- Toute modification de cette page s'accompagne d'une fixture JSON dans `core/testing/fixtures/` et d'un test de contrat.
+- Toute modification de cette page s'accompagne d'une fixture JSON dans `core/protocol/src/test/resources/fixtures/` : le test de contrat échoue si une méthode déclarée n'en a pas.
 
 ## 8. Tester à la main
 
@@ -271,11 +274,11 @@ websocat ws://192.168.1.20:8765/homehub
 
 ## Annexe : protocole v1 (legacy)
 
-Utilisé par HomeHub 1.1.0 / Remote 1.0.0 (V2). Retiré en V4.
+Utilisé par HomeHub 1.1.0 / Remote 1.0.0 (V2). **Retiré en 0.3.0-alpha.1** : mettre à jour les deux applications ensemble.
 
 - TCP brut sur le port 8765, un objet JSON par ligne, champ `t` pour le type.
 - Téléphone → TV : `hello`, `auth`, `pair`, `key`, `voice`, `text`, `launch`, `apps`, `icon`, `ping`.
 - TV → téléphone : `info`, `welcome`, `pairing`, `paired`, `result`, `apps`, `icon`, `status`, `error`, `pong`.
 - Différence majeure : le message `voice` envoie la phrase brute, interprétée **par la TV**. En v2, la TV ne reçoit plus que des commandes.
 
-Référence d'implémentation : `protocol/src/main/java/com/homehub/protocol/MessageCodec.kt`.
+Référence d'implémentation : historique Git, module `protocol/` (supprimé).

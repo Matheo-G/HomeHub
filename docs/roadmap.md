@@ -7,7 +7,7 @@ Versionnage ([ADR-0010](adr/0010-workflow-git-et-versionnage.md)) : la version `
 |---|---|---|---|
 | V1 | Launcher | ✅ Livrée | 0.1.0 (publiée sous le nom 1.0.0) |
 | V2 | Télécommande | ✅ Livrée | 0.2.0 (publiée sous le nom 1.1.0, build 5) |
-| V3 | Recherche universelle | 🔜 Prochaine | 0.3.0 |
+| V3 | Recherche universelle | 🚧 En cours (lots 3.1–3.2 livrés) | 0.3.0 |
 | V4 | IA | Planifiée | 0.4.0 |
 | V5 | Widgets | Planifiée | 0.5.0 |
 | V6 | Agents spécialisés | Planifiée | 0.6.0 |
@@ -42,17 +42,17 @@ Dette connue reprise en V3 : interprétation vocale sur la TV, protocole TCP mai
 
 **Objectif** : « Recherche Interstellar » affiche, sur la TV, des cartes de résultats provenant de plusieurs services, et ouvre le bon contenu dans la bonne application.
 
-### Lot 3.1 — Fondations (prérequis)
-- Renommage des modules `:tv`, `:phone`, `:core:protocol` (Kotlin pur, kotlinx.serialization) — [ADR-0009](adr/0009-modularisation.md)
-- Protocole v2 : JSON-RPC 2.0 sur WebSocket, côté TV (serveur) et téléphone (client), v1 conservé en parallèle — [ADR-0003](adr/0003-protocole-json-rpc-websocket.md)
-- `CommandDispatcher` unique sur la TV, handlers par domaine
-- Fixtures de contrat partagées + tests
-- ktlint + detekt en CI, contrôle de taille des APK
+### Lot 3.1 — Fondations ✅ (0.3.0-alpha.1)
+- ✅ Modules `:tv`, `:phone`, `:core:protocol` (Kotlin pur, kotlinx.serialization) — [ADR-0009](adr/0009-modularisation.md)
+- ✅ Protocole v2 : JSON-RPC 2.0 sur WebSocket (Java-WebSocket / OkHttp), v1 retiré — [ADR-0003](adr/0003-protocole-json-rpc-websocket.md)
+- ✅ `CommandDispatcher` unique sur la TV, handlers par domaine ; l'interface locale l'utilise aussi
+- ✅ Fixtures de contrat + tests ; contrôle de taille des APK en CI ; version unique dans `gradle.properties`
+- ⏳ Lot 3.1b : ktlint + detekt en CI
 
-### Lot 3.2 — Moteur d'intentions sur le téléphone
-- Module `:phone:intent` : normalisation, règles, intents typés — [ADR-0006](adr/0006-moteur-intentions-hybride.md)
-- Migration de la grammaire V2 et de ses tests depuis la TV
-- Corpus de test de 200 phrases, taux de compréhension mesuré en CI
+### Lot 3.2 — Moteur d'intentions sur le téléphone ✅ (0.3.0-alpha.1)
+- ✅ Module `:phone:intent` : normalisation, règles, `UserIntent` typés — [ADR-0006](adr/0006-moteur-intentions-hybride.md)
+- ✅ Grammaire V2 et ses tests déplacés depuis la TV ; planificateur `IntentExecutor` sur le téléphone
+- 🔄 Corpus : 69 phrases mesurées à chaque build (seuil 95 %) ; objectif 200 phrases d'ici la sortie de la V3
 
 ### Lot 3.3 — Sources de recherche
 - Interface `SearchSource` — [ADR-0007](adr/0007-recherche-universelle.md)
@@ -77,7 +77,6 @@ Dette connue reprise en V3 : interprétation vocale sur la TV, protocole TCP mai
 - Classification par IA des phrases non comprises par les règles (sortie JSON validée)
 - Panneau de réponse sur la TV, affichage en flux (`cards.update` + `bodyAppend`), actions de suivi (« Voir ses films »)
 - Contexte transmis à l'IA : application au premier plan, dernière recherche (opt-in)
-- Retrait du protocole v1
 
 **Critères de sortie** : première ligne de réponse < 3 s ; changement de fournisseur sans redémarrage ; aucune clé hors du téléphone (vérifié par revue et test).
 

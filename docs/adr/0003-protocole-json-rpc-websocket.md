@@ -36,3 +36,7 @@ Le cahier des charges demande une API locale documentée, une couche de commande
 - ✅ Débogage avec des outils standards.
 - ⚠️ Migration : v1 et v2 coexistent pendant la V3 (ports/chemins distincts), v1 retiré en V4.
 - ⚠️ Ajout d'une dépendance TV (~150 Ko), mesurée par le contrôle de taille d'APK en CI.
+
+## Amendement — 2026-10-29 (0.3.0-alpha.1)
+
+Le protocole v1 est **retiré immédiatement** au lieu de coexister jusqu'à la V4. Raisons : les deux applications sont publiées ensemble dans la même release, le parc v1 se limite à l'appareil du mainteneur, et une coexistence aurait imposé deux serveurs sur deux ports avec deux annonces DNS-SD, au prix d'une complexité sans utilisateur. Conséquence : il faut mettre à jour la TV et le téléphone ensemble ; le téléphone ne propose que les TV annonçant `proto=2`.
