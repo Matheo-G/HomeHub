@@ -7,7 +7,7 @@ Versionnage ([ADR-0010](adr/0010-workflow-git-et-versionnage.md)) : la version `
 |---|---|---|---|
 | V1 | Launcher | ✅ Livrée | 0.1.0 (publiée sous le nom 1.0.0) |
 | V2 | Télécommande | ✅ Livrée | 0.2.0 (publiée sous le nom 1.1.0, build 5) |
-| V3 | Recherche universelle | 🚧 En cours (lots 3.1–3.2 livrés) | 0.3.0 |
+| V3 | Recherche universelle | 🚧 En cours (lots 3.1–3.4 livrés, 3.1b et 3.3b restants) | 0.3.0 |
 | V4 | IA | Planifiée | 0.4.0 |
 | V5 | Widgets | Planifiée | 0.5.0 |
 | V6 | Agents spécialisés | Planifiée | 0.6.0 |
@@ -54,16 +54,18 @@ Dette connue reprise en V3 : interprétation vocale sur la TV, protocole TCP mai
 - ✅ Grammaire V2 et ses tests déplacés depuis la TV ; planificateur `IntentExecutor` sur le téléphone
 - 🔄 Corpus : 69 phrases mesurées à chaque build (seuil 95 %) ; objectif 200 phrases d'ici la sortie de la V3
 
-### Lot 3.3 — Sources de recherche
-- Interface `SearchSource` — [ADR-0007](adr/0007-recherche-universelle.md)
-- `TmdbSource` (films, séries, personnes, fournisseurs de streaming FR), `YouTubeSource`, `PlexSource` (serveur local), `InstalledAppsSource`
-- Agrégation parallèle avec délai maximal, déduplication, classement
-- Écran de configuration des sources et des clés sur le téléphone (coffre chiffré)
+### Lot 3.3 — Sources de recherche ✅ (0.3.0-alpha.2)
+- ✅ Module `:phone:sources` (Kotlin pur), interface `SearchSource` — [ADR-0007](adr/0007-recherche-universelle.md)
+- ✅ `TmdbSource` (films, séries, personnes, disponibilité par service en France), `InstalledAppsSource`, cartes « Chercher dans… »
+- ✅ Agrégation parallèle bornée à 2,5 s, déduplication, classement ; tests sur serveur simulé
+- ✅ Écran « Sources de recherche » sur le téléphone, clé TMDB vérifiée puis chiffrée (Android Keystore)
+- ⏳ Lot 3.3b : `YouTubeSource` (YouTube Data API), `PlexSource` (serveur local), cache des résultats
 
-### Lot 3.4 — Cartes sur la TV
-- Moteur de cartes (`results`, `focus`, `loading`), carte générique, `video`, `person`, `app` — [ADR-0008](adr/0008-interface-en-cartes.md)
-- Ouverture d'un résultat : deep link quand il existe, sinon recherche dans l'application, sinon ouverture simple
-- Aperçu des mêmes cartes sur le téléphone
+### Lot 3.4 — Cartes sur la TV ✅ (0.3.0-alpha.2)
+- ✅ `cards.show` / `update` / `dismiss`, événements `card.action` / `cards.dismissed` — [ADR-0008](adr/0008-interface-en-cartes.md)
+- ✅ Disposition `results` : en-tête, détail de la carte focalisée, rangées par section, affiches envoyées par le téléphone, chargement, fermeture automatique
+- ✅ Ouverture d'un résultat décidée par le téléphone : recherche du titre dans le service disponible, bande-annonce sur YouTube sinon
+- ⏳ Aperçu des cartes sur le téléphone (V4, avec les réponses IA)
 
 **Critères de sortie** : « Recherche Interstellar » affiche des résultats en < 2,5 s ; ouverture correcte sur Netflix/Prime/YouTube/Plex quand le contenu y est ; > 85 % du corpus compris sans IA ; protocole v2 documenté et couvert par tests de contrat ; TV toujours < 3 Mo.
 

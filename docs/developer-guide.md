@@ -17,7 +17,7 @@ git clone https://github.com/Matheo-G/HomeHub.git
 cd HomeHub
 ./gradlew :tv:assembleDebug :phone:assembleDebug        # APK de développement
 ./gradlew :tv:assembleRelease :phone:assembleRelease    # APK optimisées (R8)
-./gradlew :core:protocol:test :phone:intent:test :tv:testReleaseUnitTest   # tests
+./gradlew :core:protocol:test :phone:intent:test :phone:sources:test :tv:testReleaseUnitTest   # tests
 ```
 
 Sorties :
@@ -34,7 +34,8 @@ Les versions `debug` ont un suffixe d'identifiant (`.debug`) : elles s'installen
 HomeHub/
 ├── tv/             :tv — HomeHub TV (launcher, couche de commandes, serveur WebSocket)
 ├── phone/          :phone — HomeHub Remote (le cerveau : session, voix, planificateur)
-│   └── intent/     :phone:intent — moteur d'intentions (Kotlin pur) + corpus de phrases
+│   ├── intent/     :phone:intent — moteur d'intentions (Kotlin pur) + corpus de phrases
+│   └── sources/    :phone:sources — recherche universelle : TMDB, applications, agrégateur (Kotlin pur)
 ├── core/protocol/  :core:protocol — API locale v2 (Kotlin pur) + fixtures de contrat
 ├── signing/        Clé de développement partagée (dev.keystore)
 ├── docs/           Vision, architecture, API, roadmap, ADR, changelog
@@ -103,7 +104,7 @@ Une pull request qui touche le protocole met à jour [l'API locale](api/local-ap
 Implémenter `AIProvider`, l'enregistrer dans `AIProviderRegistry`, déclarer ses champs de configuration ([ADR-0005](adr/0005-abstraction-aiprovider.md)).
 
 ### Ajouter une source de recherche
-Implémenter `SearchSource` et l'enregistrer dans l'agrégateur ([ADR-0007](adr/0007-recherche-universelle.md)).
+Implémenter `SearchSource` dans `phone/sources` (test avec `MockWebServer`), puis l'ajouter à la liste de `SearchAggregator` dans `RemoteContainer` ; une clé éventuelle va dans `SecretStore` ([ADR-0007](adr/0007-recherche-universelle.md)).
 
 ### Ajouter un type de carte
 ADR courte, ajout du `kind` dans le protocole, composant de rendu TV, repli générique vérifié.
