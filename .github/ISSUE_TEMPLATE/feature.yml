@@ -1,0 +1,22 @@
+name: Idée de fonctionnalité
+description: Proposer une amélioration de HomeHub
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problème
+      description: Quelle situation est pénible ou impossible aujourd'hui ?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposition
+    validations:
+      required: true
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Version de la roadmap concernée
+      options: [V3 Recherche, V4 IA, V5 Widgets, V6 Agents, V7 Synchronisation, V8 Thèmes, V9 Plugins, V10 Stable, Je ne sais pas]

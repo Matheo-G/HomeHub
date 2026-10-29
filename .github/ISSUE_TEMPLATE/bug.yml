@@ -1,0 +1,42 @@
+name: Bug
+description: Un comportement incorrect de HomeHub TV ou HomeHub Remote
+labels: [bug]
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Application
+      options: [HomeHub TV, HomeHub Remote (téléphone), Les deux]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / build
+      placeholder: "0.3.0 — build 12 (Paramètres HomeHub, en bas)"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Appareil et version d'Android
+      placeholder: "Xiaomi Mi Box MDZ-16-AB, Android 9 · Pixel 8, Android 15"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: "1. Ouvrir… 2. Dire « … » 3. …"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu / obtenu
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Journaux (facultatif)
+      description: "adb logcat -s HomeHub — retirez toute information personnelle."
+      render: text
