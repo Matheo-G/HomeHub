@@ -1,0 +1,9 @@
+{
+  "method": "ui.toast",
+  "params": {
+    "message": "Ouverture de Netflix",
+    "title": "Lance Netflix",
+    "kind": "success"
+  },
+  "result": {}
+}

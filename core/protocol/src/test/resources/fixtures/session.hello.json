@@ -1,0 +1,28 @@
+{
+  "method": "session.hello",
+  "params": {
+    "protocol": 2,
+    "client": {
+      "id": "3f2b9c1e-6d1a-4c55-9a0e-2b7a1c9d0e11",
+      "name": "Pixel 8",
+      "version": "0.3.0"
+    }
+  },
+  "result": {
+    "protocol": 2,
+    "authRequired": true,
+    "pairingOpen": false,
+    "box": {
+      "id": "5f0c2d7e-0b1a-4e8f-9c3d-7a6b5c4d3e2f",
+      "name": "Mi Box",
+      "model": "MIBOX3",
+      "sdk": 28,
+      "version": "0.3.0"
+    },
+    "capabilities": [
+      "input.fullControl",
+      "app.open",
+      "ui.toast"
+    ]
+  }
+}

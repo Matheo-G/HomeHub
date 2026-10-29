@@ -1,6 +1,6 @@
 # Architecture HomeHub
 
-> Statut : **référence cible à partir de la V3**. La section [État actuel et migration](#13-état-actuel-et-migration) décrit l'écart avec le code de la V2.
+> Statut : **référence**. Lots 3.1 et 3.2 implémentés en 0.3.0-alpha.1 ; la section [État actuel et migration](#13-état-actuel-et-migration) suit l'avancement.
 
 ## Sommaire
 
@@ -258,7 +258,7 @@ Implémentations : `DemoProvider` en V4 (hors ligne, réponses scénarisées, po
 
 ## 7. Communication : la couche de commandes unique
 
-- **Transport** : WebSocket sur le réseau local, `ws://<tv>:8765/homehub`.
+- **Transport** : WebSocket sur le réseau local, `ws://<tv>:8765/homehub` (serveur Java-WebSocket sur la TV, client OkHttp sur le téléphone).
 - **Format** : JSON-RPC 2.0 — requêtes (avec `id`), réponses, notifications (sans `id`) dans les deux sens.
 - **Méthodes** nommées `domaine.action` : `app.launch`, `cards.show`, `widgets.update`, `notifications.show`, `input.key`…
 - **Événements** TV → téléphone : `card.action`, `session.status`, `tv.foregroundChanged`…
@@ -366,13 +366,15 @@ Règles d'implémentation TV : animations lues en phase de dessin (aucune recomp
 
 ## 13. État actuel et migration
 
-| Sujet | V2 (actuel) | Cible | Migration |
+| Sujet | V2 | Cible | État |
 |---|---|---|---|
-| Transport | TCP, une ligne JSON par message | WebSocket + JSON-RPC 2.0 | V3 : serveur v2 en parallèle du v1, téléphone en v2, retrait du v1 en V4 |
-| Interprétation vocale | Sur la TV (`VoiceCommandInterpreter`) | Sur le téléphone (`:phone:intent`) | V3 : déplacement du code et de ses tests ; la TV ne reçoit plus que des commandes |
-| Modules | `:app`, `:remote`, `:protocol` (Android, org.json) | `:tv`, `:phone`, `:core:protocol` (JVM, kotlinx.serialization)… | V3 : renommage des dossiers ; les `applicationId` ne changent pas (mises à jour transparentes) |
-| Rendu de réponses | Bandeau de confirmation | Moteur de cartes | V3 (résultats) puis V4 (réponses IA) |
-| Versions | TV `1.1.0`, téléphone `1.0.0` | `0.3.0` à la V3 | Les `versionCode` restent croissants : aucune désinstallation nécessaire |
+| Transport | TCP, une ligne JSON par message | WebSocket + JSON-RPC 2.0 | ✅ 0.3.0-alpha.1 — v1 retiré (voir amendement de l'[ADR-0003](adr/0003-protocole-json-rpc-websocket.md)) |
+| Couche de commandes | Gestionnaire réseau ad hoc | `CommandDispatcher` unique | ✅ 0.3.0-alpha.1 — réseau et interface locale passent par la même couche |
+| Interprétation vocale | Sur la TV | Sur le téléphone (`:phone:intent`) | ✅ 0.3.0-alpha.1 — la TV ne reçoit plus que des commandes |
+| Modules | `:app`, `:remote`, `:protocol` | `:tv`, `:phone`, `:phone:intent`, `:core:protocol` | ✅ 0.3.0-alpha.1 — `applicationId` inchangés ; `:phone:ai`, `:phone:sources` arrivent avec leurs fonctionnalités |
+| Rendu de réponses | Bandeau de confirmation | Moteur de cartes | ⏳ Lot 3.4 (résultats) puis V4 (réponses IA) |
+| Analyse statique | — | ktlint + detekt | ⏳ Lot 3.1b |
+| Versions | TV `1.1.0`, téléphone `1.0.0` | `0.3.0` à la V3 | ✅ Version unique `0.3.0-alpha.1` ; `versionCode` croissants, aucune désinstallation nécessaire |
 
 ## 14. Contraintes de la plateforme et risques
 

@@ -32,3 +32,7 @@ Règles vérifiées en revue (et par un test de graphe de dépendances en CI) :
 - ✅ Frontières explicites : impossible de mettre de la logique « cerveau » dans la TV par inadvertance.
 - ✅ `applicationId` conservés : les utilisateurs mettent à jour sans désinstaller.
 - ⚠️ Renommage des dossiers : chemins des APK et du workflow CI à adapter dans la même pull request.
+
+## Amendement — 2026-10-29 (0.3.0-alpha.1)
+
+`:core:testing` n'est pas encore créé : les fixtures de contrat vivent dans `core/protocol/src/test/resources/fixtures/`, seul module qui les consomme aujourd'hui. Le module sera extrait quand la TV ou le téléphone auront leurs propres tests de contrat. La clé de développement est déplacée dans `signing/dev.keystore`, partagée par les deux applications.

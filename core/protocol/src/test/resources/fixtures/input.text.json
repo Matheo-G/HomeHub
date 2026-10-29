@@ -1,0 +1,10 @@
+{
+  "method": "input.text",
+  "params": {
+    "text": "Interstellar",
+    "mode": "replace"
+  },
+  "result": {
+    "applied": true
+  }
+}

@@ -15,16 +15,16 @@
 ```bash
 git clone https://github.com/Matheo-G/HomeHub.git
 cd HomeHub
-./gradlew :app:assembleDebug :remote:assembleDebug      # APK de développement
-./gradlew :app:assembleRelease :remote:assembleRelease  # APK optimisées (R8)
-./gradlew :app:testReleaseUnitTest                      # tests unitaires
+./gradlew :tv:assembleDebug :phone:assembleDebug        # APK de développement
+./gradlew :tv:assembleRelease :phone:assembleRelease    # APK optimisées (R8)
+./gradlew :core:protocol:test :phone:intent:test :tv:testReleaseUnitTest   # tests
 ```
 
-> Après le lot 3.1 ([ADR-0009](adr/0009-modularisation.md)), les modules deviennent `:tv` et `:phone` ; ce guide sera mis à jour dans la même pull request.
-
 Sorties :
-- TV : `app/build/outputs/apk/release/app-release.apk`
-- Téléphone : `remote/build/outputs/apk/release/remote-release.apk`
+- TV : `tv/build/outputs/apk/release/tv-release.apk`
+- Téléphone : `phone/build/outputs/apk/release/phone-release.apk`
+
+La version des deux applications est définie à un seul endroit : `homehub.version` dans `gradle.properties`.
 
 Les versions `debug` ont un suffixe d'identifiant (`.debug`) : elles s'installent à côté des versions publiées.
 
@@ -32,9 +32,11 @@ Les versions `debug` ont un suffixe d'identifiant (`.debug`) : elles s'installen
 
 ```
 HomeHub/
-├── app/            HomeHub TV (launcher)                 → :tv en V3
-├── remote/         HomeHub Remote (téléphone)            → :phone en V3
-├── protocol/       Protocole v1 partagé                  → :core:protocol en V3
+├── tv/             :tv — HomeHub TV (launcher, couche de commandes, serveur WebSocket)
+├── phone/          :phone — HomeHub Remote (le cerveau : session, voix, planificateur)
+│   └── intent/     :phone:intent — moteur d'intentions (Kotlin pur) + corpus de phrases
+├── core/protocol/  :core:protocol — API locale v2 (Kotlin pur) + fixtures de contrat
+├── signing/        Clé de développement partagée (dev.keystore)
 ├── docs/           Vision, architecture, API, roadmap, ADR, changelog
 ├── .github/        CI, modèles d'issues et de pull requests
 ├── gradle/         Catalogue de versions (libs.versions.toml), wrapper
@@ -79,7 +81,8 @@ Une pull request qui touche le protocole met à jour [l'API locale](api/local-ap
 | Niveau | Où | Exemple |
 |---|---|---|
 | Unitaires JVM | `src/test` | Grammaire vocale (`VoiceCommandInterpreterTest`) |
-| Contrat de protocole | `:core:testing` (V3) | Chaque exemple JSON de l'API est décodé puis réencodé à l'identique par les deux applications |
+| Contrat de protocole | `core/protocol/src/test` | Chaque exemple JSON de l'API (`fixtures/`) est décodé puis réécrit sans perte par les types partagés |
+| Compréhension | `phone/intent/src/test` | Corpus de phrases (`corpus.tsv`) : taux de compréhension mesuré à chaque build |
 | Interface | `src/androidTest` (V5) | Navigation au pavé directionnel sur l'accueil |
 | Manuel | Mi Box | Liste de vérification dans le modèle de pull request |
 
@@ -87,14 +90,14 @@ Une pull request qui touche le protocole met à jour [l'API locale](api/local-ap
 
 ### Ajouter une commande TV
 1. Documenter la méthode dans [l'API locale](api/local-api.md) (+ capacité si nouvelle).
-2. Ajouter le message dans `:core:protocol` et une fixture JSON.
-3. Ajouter le cas `TvCommand` et son traitement dans le handler du domaine.
-4. L'appeler depuis le planificateur du téléphone.
+2. Déclarer paramètres et résultat dans `core/protocol/.../Messages.kt`, la méthode dans `Methods.kt`, et une fixture JSON (le test de contrat échoue sinon).
+3. Ajouter le cas `TvCommand`, sa branche dans `CommandDispatcher` et le handler du domaine (`tv/.../command/`), puis la route dans `RpcRouter`.
+4. L'appeler depuis le planificateur du téléphone (`phone/.../planner/IntentExecutor.kt`).
 
 ### Ajouter une intention
-1. Ajouter des phrases au corpus de test.
-2. Ajouter la règle dans `:phone:intent` (ou l'intent s'il est nouveau).
-3. Traduire l'intent en commandes dans le planificateur.
+1. Ajouter des phrases au corpus (`phone/intent/src/test/resources/corpus.tsv`).
+2. Ajouter la règle dans `IntentParser` (ou un cas de `UserIntent` s'il est nouveau).
+3. Traduire l'intention en commandes dans `IntentExecutor`.
 
 ### Ajouter un fournisseur d'IA
 Implémenter `AIProvider`, l'enregistrer dans `AIProviderRegistry`, déclarer ses champs de configuration ([ADR-0005](adr/0005-abstraction-aiprovider.md)).
@@ -108,7 +111,7 @@ ADR courte, ajout du `kind` dans le protocole, composant de rendu TV, repli gén
 ## 9. Déboguer
 
 - **Journaux** : `adb logcat -s HomeHub`.
-- **Protocole** : `websocat ws://<ip-tv>:8765/homehub` (v2) ou `nc <ip-tv> 8765` (v1), voir [l'API locale](api/local-api.md#8-tester-à-la-main).
+- **Protocole** : `websocat ws://<ip-tv>:8765/homehub`, voir [l'API locale](api/local-api.md#8-tester-à-la-main).
 - **Découverte** : `avahi-browse -r _homehub._tcp` (Linux) ou `dns-sd -B _homehub._tcp` (macOS).
 - **Performances** : Android Studio Profiler, `adb shell dumpsys gfxinfo com.homehub.launcher`.
 

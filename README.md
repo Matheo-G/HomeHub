@@ -6,7 +6,7 @@ Un launcher Android TV moderne, sobre et fluide, écrit en Kotlin avec Jetpack C
 
 HomeHub remplace l'écran d'accueil d'origine par une interface pensée pour la télécommande : de grandes cartes, un focus lumineux et vivant, un fond animé discret, et rien qui ne détourne l'attention du contenu.
 
-> **v1.1** — launcher + **HomeHub Remote**, la télécommande pour téléphone Android avec micro intégré.
+> **0.3.0-alpha** — launcher + **HomeHub Remote** (télécommande téléphone avec micro intégré), protocole local v2 (JSON-RPC sur WebSocket), moteur d'intentions sur le téléphone. Feuille de route : [docs/roadmap.md](docs/roadmap.md).
 
 **Téléchargement direct (dernière version)** :
 [HomeHub-TV.apk](https://github.com/Matheo-G/HomeHub/releases/latest/download/HomeHub-TV.apk) (box) ·
@@ -102,9 +102,10 @@ Pour que les **flèches, OK, Retour et le clavier** fonctionnent aussi **dans Ne
 ## Architecture
 
 ```
-protocol/                         Messages TV ↔ téléphone (JSON par ligne), partagés par les deux apps
-remote/                           HomeHub Remote (téléphone) : découverte mDNS, appairage, micro, pavé, applis, clavier
-app/src/main/java/com/homehub/launcher/
+core/protocol/                    API locale v2 (JSON-RPC 2.0) partagée, Kotlin pur + tests de contrat
+phone/                            HomeHub Remote (téléphone, le cerveau) : session, voix, planificateur, interface
+phone/intent/                     Moteur d'intentions (règles françaises), Kotlin pur + corpus de test
+tv/src/main/java/com/homehub/launcher/
 ├── HomeHubApplication.kt        Crée le conteneur de dépendances
 ├── MainActivity.kt              Activité unique (catégorie HOME)
 ├── di/
@@ -120,7 +121,8 @@ app/src/main/java/com/homehub/launcher/
 ├── viewmodel/
 │   ├── HomeViewModel.kt         Favoris, récents, toutes les apps, réseau
 │   └── SettingsViewModel.kt     Réglages (thème global + page Paramètres)
-├── remote/                      Serveur de télécommande, appairage PIN, commandes vocales, contrôle complet
+├── command/                     Couche de commandes unique (TvCommand, CommandDispatcher, handlers)
+├── remote/                      Serveur WebSocket, routeur JSON-RPC, appairage PIN, contrôle complet
 ├── utils/                       AppLauncher, Clock, conversion d'images
 └── ui/
     ├── HomeHubApp.kt            Racine : thème + fond + navigation
@@ -144,9 +146,9 @@ Chaque push sur `main` compile automatiquement l'APK :
 
 1. Ouvrez l'onglet **Actions** du dépôt, puis le dernier run **Android CI** marqué ✓.
 2. En bas de la page, section **Artifacts**, téléchargez **HomeHub-release** (un `.zip`).
-3. Décompressez-le : vous obtenez `HomeHub-v1.0.0-buildN.apk`.
+3. Décompressez-le : vous obtenez `HomeHub-TV.apk` (et `HomeHub-Remote.apk` dans l'artefact du téléphone).
 
-Toutes les APK sont signées avec la même clé de développement (`app/debug.keystore`) : une nouvelle version s'installe **par-dessus** la précédente, sans désinstallation.
+Toutes les APK sont signées avec la même clé de développement (`signing/dev.keystore`) : une nouvelle version s'installe **par-dessus** la précédente, sans désinstallation.
 
 ### APK signée avec votre propre clé (optionnel)
 
@@ -172,7 +174,7 @@ Prérequis : Android Studio (dernière version stable), qui fournit le JDK 17 et
 ./gradlew assembleRelease        # Windows : gradlew.bat assembleRelease
 ```
 
-L'APK est générée dans `app/build/outputs/apk/release/app-release.apk`.
+Les APK sont générées dans `tv/build/outputs/apk/release/tv-release.apk` et `phone/build/outputs/apk/release/phone-release.apk`.
 
 ## Installer sur la Mi Box avec « Send Files to TV »
 
@@ -188,7 +190,7 @@ Si l'APK ne s'ouvre pas depuis l'application, passez par un gestionnaire de fich
 
 ```bash
 adb connect <IP_DE_LA_BOX>:5555
-adb install -r HomeHub-v1.0.0-buildN.apk
+adb install -r HomeHub-TV.apk
 ```
 
 ## Faire de HomeHub l'écran d'accueil

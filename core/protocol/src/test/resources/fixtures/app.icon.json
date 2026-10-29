@@ -1,0 +1,10 @@
+{
+  "method": "app.icon",
+  "params": {
+    "package": "com.netflix.ninja",
+    "size": 128
+  },
+  "result": {
+    "png": "iVBORw0KGgo="
+  }
+}

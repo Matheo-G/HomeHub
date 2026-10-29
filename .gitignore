@@ -14,7 +14,7 @@ captures/
 # Clés : seule la clé de développement partagée est versionnée
 *.jks
 *.keystore
-!app/debug.keystore
+!signing/dev.keystore
 
 # Divers
 .DS_Store

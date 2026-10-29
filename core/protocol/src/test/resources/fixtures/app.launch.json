@@ -1,0 +1,9 @@
+{
+  "method": "app.launch",
+  "params": {
+    "package": "com.netflix.ninja"
+  },
+  "result": {
+    "launched": true
+  }
+}
