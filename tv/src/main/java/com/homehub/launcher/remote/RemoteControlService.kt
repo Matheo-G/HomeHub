@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import com.homehub.launcher.BuildConfig
 import com.homehub.launcher.HomeHubApplication
 import com.homehub.launcher.R
+import com.homehub.launcher.cards.CardEvent
 import com.homehub.protocol.Protocol
 import com.homehub.protocol.BoxInfo
 import com.homehub.protocol.Events
@@ -120,6 +121,16 @@ class RemoteControlService : Service() {
         scope.launch {
             rpcServer.connectedPhones.collect { count ->
                 container.remoteHub.updateStatus { it.copy(connectedPhones = count, address = localIpAddress()) }
+            }
+        }
+        // Actions et fermetures de cartes : le téléphone décide de la suite.
+        scope.launch {
+            container.cardsStore.events.collect { event ->
+                val frame = when (event) {
+                    is CardEvent.Action -> JsonRpc.event(Events.CardAction, event.event)
+                    is CardEvent.Dismissed -> JsonRpc.event(Events.CardsDismissed, event.event)
+                }
+                rpcServer.sendToPaired(frame)
             }
         }
         // Prévient les téléphones connectés quand le contrôle complet ou l'appairage change.

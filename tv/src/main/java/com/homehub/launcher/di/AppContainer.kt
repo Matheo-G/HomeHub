@@ -1,7 +1,9 @@
 package com.homehub.launcher.di
 
 import android.content.Context
+import com.homehub.launcher.cards.CardsStore
 import com.homehub.launcher.command.AppHandler
+import com.homehub.launcher.command.CardHandler
 import com.homehub.launcher.command.CommandDispatcher
 import com.homehub.launcher.command.FeedbackHandler
 import com.homehub.launcher.command.InputHandler
@@ -72,6 +74,10 @@ class AppContainer(context: Context) {
             apps = AppHandler(appLauncher, recentAppsRepository),
             navigation = NavigationHandler(appLauncher),
             feedback = FeedbackHandler(appContext, remoteHub),
+            cards = CardHandler(cardsStore, appLauncher),
         )
     }
+
+    /** Cartes affichées (résultats de recherche, réponses) et événements associés. */
+    val cardsStore: CardsStore by lazy { CardsStore() }
 }

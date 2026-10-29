@@ -62,6 +62,7 @@ class MainActivity : ComponentActivity() {
                 settingsViewModel = settingsViewModel,
                 artworkLoader = artworkLoader,
                 remoteFeedback = container.remoteHub.feedback,
+                cardsStore = container.cardsStore,
             )
         }
 
