@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Marque HomeHub : un « H » formé de deux piliers reliés par un pont,
+    posé dans un carré arrondi bleu électrique. Zone utile de 66 dp centrée
+    dans le canevas adaptatif de 108 dp.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Pastille d'accent -->
+    <path
+        android:fillColor="@color/brand_accent"
+        android:pathData="M40,30 L68,30 A10,10 0 0 1 78,40 L78,68 A10,10 0 0 1 68,78 L40,78 A10,10 0 0 1 30,68 L30,40 A10,10 0 0 1 40,30 Z" />
+    <!-- Pilier gauche -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M42,41 L47,41 L47,67 L42,67 Z" />
+    <!-- Pilier droit -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M61,41 L66,41 L66,67 L61,67 Z" />
+    <!-- Pont central -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M47,51.5 L61,51.5 L61,56.5 L47,56.5 Z" />
+</vector>
