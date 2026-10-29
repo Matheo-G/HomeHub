@@ -24,7 +24,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -78,6 +81,11 @@ class RemoteClient(
 
     private val stateFlow = MutableStateFlow<ConnectionState>(ConnectionState.Idle)
     val state: StateFlow<ConnectionState> = stateFlow.asStateFlow()
+
+    private val eventFlow = MutableSharedFlow<RpcMessage.Call>(extraBufferCapacity = 32)
+
+    /** Événements de la TV autres que l'état de session (`card.action`, `cards.dismissed`…). */
+    val events: SharedFlow<RpcMessage.Call> = eventFlow.asSharedFlow()
 
     /** Se connecte à une box (et abandonne la connexion précédente). */
     fun connect(box: BoxAddress) {
@@ -286,7 +294,9 @@ class RemoteClient(
         when (message) {
             is RpcMessage.Result -> pending[message.id.asLong() ?: return]?.complete(message.result)
             is RpcMessage.Error -> message.id?.asLong()?.let { pending[it]?.completeExceptionally(message.error) }
-            is RpcMessage.Call -> if (message.method == Events.Status.name) {
+            is RpcMessage.Call -> if (message.method != Events.Status.name) {
+                eventFlow.tryEmit(message)
+            } else {
                 val status = runCatching { JsonRpc.decodeParams(Events.Status.params, message.params) }.getOrNull() ?: return
                 stateFlow.update { current ->
                     when (current) {
