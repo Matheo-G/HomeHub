@@ -1,7 +1,8 @@
 /*
  * HomeHub — configuration des dépôts et des modules.
  *
- * Un seul module applicatif (:app) pour la V1. Les futures briques
+ * Modules : :app (launcher TV), :remote (télécommande téléphone) et
+ * :protocol (messages échangés entre les deux). Les futures briques
  * (widgets, intégrations domotique, IA…) pourront devenir des modules
  * Gradle indépendants (:feature:weather, :integration:nas…) sans toucher
  * au reste de l'arborescence.
@@ -30,4 +31,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "HomeHub"
-include(":app")
+include(":app")      // Launcher Android TV
+include(":remote")   // Télécommande pour téléphone Android
+include(":protocol") // Protocole partagé TV ↔ téléphone

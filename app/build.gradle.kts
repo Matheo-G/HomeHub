@@ -34,7 +34,14 @@ android {
         targetSdk = 35
         // En CI, le numéro de build GitHub garantit un versionCode croissant.
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
-        versionName = "1.0.0"
+        versionName = "1.1.0"
+
+        // Lien stable vers la dernière télécommande publiée (QR code de l'écran d'appairage).
+        buildConfigField(
+            "String",
+            "REMOTE_APK_URL",
+            "\"https://github.com/Matheo-G/HomeHub/releases/latest/download/HomeHub-Remote.apk\"",
+        )
     }
 
     signingConfigs {
@@ -127,4 +134,9 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.profileinstaller)
+
+    implementation(project(":protocol"))
+    implementation(libs.zxing.core)
+
+    testImplementation(libs.junit)
 }

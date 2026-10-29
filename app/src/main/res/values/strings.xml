@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HomeHub</string>
+    <string name="accessibility_label">HomeHub · Contrôle complet</string>
+    <string name="accessibility_description">Permet à la télécommande mobile HomeHub (votre téléphone) de naviguer, valider, revenir en arrière et saisir du texte dans toutes les applications de la TV. HomeHub ne lit l\'écran qu\'au moment où vous appuyez sur une touche du téléphone, et rien n\'est transmis en dehors de votre réseau local.</string>
 </resources>

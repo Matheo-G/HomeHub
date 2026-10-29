@@ -1,5 +1,6 @@
 package com.homehub.launcher.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,7 +70,21 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val usageAccessGranted by viewModel.usageAccessGranted.collectAsStateWithLifecycle()
+    val pairingPin by viewModel.pairingPin.collectAsStateWithLifecycle()
     val initialFocus = remember { FocusRequester() }
+    val pairCardFocus = remember { FocusRequester() }
+    var pairingVisible by remember { mutableStateOf(false) }
+    var refocusPairCard by remember { mutableStateOf(false) }
+    // Conservé pendant l'appairage : au retour, la liste reprend sa position.
+    val listState = rememberLazyListState()
+    val closePairing = {
+        pairingVisible = false
+        refocusPairCard = true
+        viewModel.closePairing()
+    }
+
+    // Retour pendant l'appairage : ferme le panneau (prioritaire sur la navigation).
+    BackHandler(enabled = pairingVisible) { closePairing() }
 
     // L'utilisateur revient peut-être de l'écran système d'autorisation.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshSystemState() }
@@ -78,8 +94,28 @@ fun SettingsScreen(
         runCatching { initialFocus.requestFocus() }
     }
 
+    if (pairingVisible) {
+        PairingPanel(
+            viewModel = viewModel,
+            pin = pairingPin,
+            onClose = closePairing,
+            modifier = modifier,
+        )
+        return
+    }
+
+    // Retour du panneau d'appairage : le focus revient sur la carte d'origine.
+    LaunchedEffect(refocusPairCard) {
+        if (refocusPairCard) {
+            awaitLayout()
+            runCatching { pairCardFocus.requestFocus() }
+            refocusPairCard = false
+        }
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
+        state = listState,
         contentPadding = PaddingValues(
             start = HubDimens.ScreenHorizontal,
             end = HubDimens.ScreenHorizontal,
@@ -142,6 +178,19 @@ fun SettingsScreen(
             }
         }
 
+        item(key = "remote") {
+            RemoteSection(
+                viewModel = viewModel,
+                settings = settings,
+                pairCardFocus = pairCardFocus,
+                onOpenPairing = {
+                    if (!settings.remoteEnabled) viewModel.setRemoteEnabled(true)
+                    viewModel.openPairing()
+                    pairingVisible = true
+                },
+            )
+        }
+
         item(key = "system") {
             SettingsSection(title = "Système") {
                 ActionCard(
@@ -173,7 +222,7 @@ fun SettingsScreen(
 
 /** Titre de section + rangée d'options, avec la marge nécessaire au focus. */
 @Composable
-private fun SettingsSection(
+internal fun SettingsSection(
     title: String,
     content: @Composable () -> Unit,
 ) {
@@ -268,16 +317,19 @@ private fun ChoiceCard(
     }
 }
 
-/** Action ouvrant un écran système. */
+/** Action ouvrant un écran système ou un panneau. */
 @Composable
-private fun ActionCard(
+internal fun ActionCard(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
+    focusRequester: FocusRequester? = null,
+    highlighted: Boolean = false,
 ) {
     FocusableSurface(
         onClick = onClick,
         modifier = Modifier.size(width = 330.dp, height = 82.dp),
+        focusRequester = focusRequester,
         cornerRadius = 18.dp,
         focusedScale = 1.06f,
     ) {
@@ -303,14 +355,18 @@ private fun ActionCard(
                 )
             }
             Spacer(Modifier.width(12.dp))
-            ArrowOutGlyph(HubColors.TextSecondary, Modifier.size(18.dp))
+            if (highlighted) {
+                SelectedBadge()
+            } else {
+                ArrowOutGlyph(HubColors.TextSecondary, Modifier.size(18.dp))
+            }
         }
     }
 }
 
 /** Pastille « sélectionné » aux couleurs de l'accent. */
 @Composable
-private fun SelectedBadge(modifier: Modifier = Modifier) {
+internal fun SelectedBadge(modifier: Modifier = Modifier) {
     val accent = LocalAccent.current.value
     Box(
         modifier = modifier

@@ -6,10 +6,12 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.Bitmap
 import android.os.Build
 import android.util.LruCache
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.homehub.launcher.data.models.AppInfo
 import com.homehub.launcher.data.models.Artwork
 import com.homehub.launcher.utils.toImageBitmap
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.text.Collator
 import java.util.Locale
 
@@ -82,6 +85,23 @@ class AppsRepository(
         .mapLatest { queryLaunchableApps() }
         .flowOn(Dispatchers.IO)
         .stateIn(scope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+
+    /** Lecture directe de la liste (télécommande, quand l'accueil n'est pas affiché). */
+    suspend fun loadApps(): List<AppInfo> = withContext(Dispatchers.IO) { queryLaunchableApps() }
+
+    /**
+     * Icône carrée encodée en PNG pour la télécommande (128 px, quelques Ko).
+     * `null` si l'application n'existe plus.
+     */
+    suspend fun loadIconPng(packageName: String): ByteArray? = withContext(Dispatchers.IO) {
+        val icon = runCatching { packageManager.getApplicationIcon(packageName) }.getOrNull()
+            ?: return@withContext null
+        val bitmap = icon.toBitmap(REMOTE_ICON_PX, REMOTE_ICON_PX, Bitmap.Config.ARGB_8888)
+        ByteArrayOutputStream().use { output ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+            output.toByteArray()
+        }
+    }
 
     /** Retourne le visuel déjà en cache, sans aucun travail. */
     fun peekArtwork(packageName: String): Artwork? = artworkCache.get(packageName)
@@ -148,5 +168,6 @@ class AppsRepository(
         const val ARTWORK_CACHE_BYTES = 24 * 1024 * 1024
         const val MAX_BANNER_WIDTH_PX = 480
         const val MAX_ICON_WIDTH_PX = 192
+        const val REMOTE_ICON_PX = 128
     }
 }

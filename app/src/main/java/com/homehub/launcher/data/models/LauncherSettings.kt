@@ -35,6 +35,7 @@ enum class CardSize(val label: String, val scale: Float) {
  * Réglages persistants du launcher.
  *
  * @property userName prénom affiché dans la salutation de l'accueil.
+ * @property remoteEnabled télécommande mobile (serveur réseau local) active.
  */
 @Immutable
 data class LauncherSettings(
@@ -42,6 +43,7 @@ data class LauncherSettings(
     val wallpaper: WallpaperStyle = WallpaperStyle.AURORA,
     val cardSize: CardSize = CardSize.STANDARD,
     val userName: String = DEFAULT_USER_NAME,
+    val remoteEnabled: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_USER_NAME: String = "Mathéo"

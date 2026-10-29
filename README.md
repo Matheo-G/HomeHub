@@ -6,7 +6,11 @@ Un launcher Android TV moderne, sobre et fluide, écrit en Kotlin avec Jetpack C
 
 HomeHub remplace l'écran d'accueil d'origine par une interface pensée pour la télécommande : de grandes cartes, un focus lumineux et vivant, un fond animé discret, et rien qui ne détourne l'attention du contenu.
 
-> **V1** — base fonctionnelle, architecture prête pour la suite (widgets, intégrations, thèmes).
+> **v1.1** — launcher + **HomeHub Remote**, la télécommande pour téléphone Android avec micro intégré.
+
+**Téléchargement direct (dernière version)** :
+[HomeHub-TV.apk](https://github.com/Matheo-G/HomeHub/releases/latest/download/HomeHub-TV.apk) (box) ·
+[HomeHub-Remote.apk](https://github.com/Matheo-G/HomeHub/releases/latest/download/HomeHub-Remote.apk) (téléphone)
 
 ---
 
@@ -20,6 +24,53 @@ HomeHub remplace l'écran d'accueil d'origine par une interface pensée pour la 
 - **Focus premium** : agrandissement sur ressort, soulèvement, ombre profonde, halo et contour de la couleur d'accent, reflet diagonal.
 - **Fond animé** : dégradé sombre, deux lumières qui dérivent, particules qui montent en scintillant. Boucle de 2 minutes parfaitement raccordée.
 - **Personnalisation** (enregistrée localement) : 6 couleurs d'accent, 3 fonds (Aurore, Nébuleuse, Minuit statique), 3 tailles de cartes. Tout s'applique en direct, avec transitions.
+
+## HomeHub Remote : la télécommande téléphone
+
+Une application Android qui transforme le téléphone en télécommande de la TV :
+
+- **Micro intégré** : appuyez, parlez, la TV exécute. Transcription en direct, ondes animées au rythme de la voix.
+- **Pavé directionnel** circulaire avec OK, répétition quand on maintient le doigt, retours haptiques.
+- **Lecture** (précédent, retour rapide, lecture/pause, avance rapide, suivant) et **volume** (maintien = réglage continu).
+- **Applis** : toutes les applications de la TV avec leurs icônes, ouverture en un appui.
+- **Clavier** : le texte tapé sur le téléphone s'écrit en direct dans le champ de recherche de la TV.
+- **Retour, micro, Accueil** toujours accessibles en bas de l'écran.
+
+### Commandes vocales (français)
+
+| Vous dites | La TV |
+|---|---|
+| « Ouvre Netflix », « Lance YouTube », « Prime Video » | ouvre l'application |
+| « Cherche Stranger Things sur Netflix » | recherche dans l'application (sinon l'ouvre) |
+| « Joue Daft Punk sur Deezer », « Mets du jazz sur YouTube » | lance la lecture / la recherche |
+| « Cherche Inception » | saisit dans le champ actif, sinon recherche globale de la TV |
+| « Pause », « Reprends », « Suivant », « Précédent » | contrôle la lecture en cours |
+| « Monte le son », « Baisse le volume », « Coupe le son » | règle le volume |
+| « Retour », « Accueil », « Paramètres », « Toutes les applications » | navigue |
+
+La TV affiche la phrase comprise et l'action effectuée ; le téléphone reçoit la même confirmation.
+
+### Installation et appairage
+
+1. **Sur la TV** : installez la nouvelle version de HomeHub (`HomeHub-TV.apk`), puis *Paramètres → Télécommande mobile → Associer un téléphone*. Un QR code et un code à 4 chiffres s'affichent.
+2. **Sur le téléphone** : scannez le QR code (ou ouvrez le lien de téléchargement ci-dessus), installez `HomeHub-Remote.apk` en autorisant l'installation depuis le navigateur.
+3. Ouvrez HomeHub Remote : la TV apparaît automatiquement (même Wi-Fi). Touchez-la et saisissez le code affiché sur la TV.
+
+Le téléphone se reconnecte ensuite tout seul à chaque ouverture.
+
+### Contrôle complet (recommandé)
+
+Sans réglage, la télécommande pilote entièrement HomeHub et, partout : lecture, volume, Accueil, ouverture d'applis et commandes vocales.
+Pour que les **flèches, OK, Retour et le clavier** fonctionnent aussi **dans Netflix, YouTube…**, activez le contrôle complet :
+*HomeHub → Paramètres → Contrôle complet* → *Accessibilité* → **HomeHub · Contrôle complet** → Activer. Aucun ADB nécessaire.
+
+> Limite d'Android 8/9 : avant Android 13, Android n'offre pas d'injection native du pavé directionnel aux applications. HomeHub déplace alors le focus via l'accessibilité : fiable dans les interfaces Android classiques, plus limité dans les applications qui dessinent leur propre interface (lecteurs vidéo). La télécommande physique reste disponible pour ces cas.
+
+### Sécurité
+
+- Tout reste sur le réseau local : aucune donnée ne quitte la maison (seule la reconnaissance vocale du téléphone utilise le service Google habituel).
+- Appairage par code affiché à l'écran, uniquement quand le panneau d'appairage est ouvert ; 5 essais maximum par code.
+- Jeton aléatoire de 256 bits par téléphone, la TV ne conserve que son empreinte SHA-256. « Oublier les téléphones » révoque tout.
 
 ## Compatibilité
 
@@ -36,12 +87,14 @@ HomeHub remplace l'écran d'accueil d'origine par une interface pensée pour la 
 - Architecture **MVVM** + flux réactifs (`StateFlow`)
 - **DataStore Preferences** pour les réglages et l'historique
 - Gradle Kotlin DSL + catalogue de versions (`gradle/libs.versions.toml`)
-- **GitHub Actions** : APK release générée à chaque push sur `main`
+- **GitHub Actions** : APK release TV + téléphone générées à chaque push sur `main`, tests unitaires, release « Dernière version »
 - Aucune dépendance superflue : pas de framework d'injection, pas de bibliothèque d'icônes, pas de navigation-compose
 
 ## Architecture
 
 ```
+protocol/                         Messages TV ↔ téléphone (JSON par ligne), partagés par les deux apps
+remote/                           HomeHub Remote (téléphone) : découverte mDNS, appairage, micro, pavé, applis, clavier
 app/src/main/java/com/homehub/launcher/
 ├── HomeHubApplication.kt        Crée le conteneur de dépendances
 ├── MainActivity.kt              Activité unique (catégorie HOME)
@@ -58,6 +111,7 @@ app/src/main/java/com/homehub/launcher/
 ├── viewmodel/
 │   ├── HomeViewModel.kt         Favoris, récents, toutes les apps, réseau
 │   └── SettingsViewModel.kt     Réglages (thème global + page Paramètres)
+├── remote/                      Serveur de télécommande, appairage PIN, commandes vocales, contrôle complet
 ├── utils/                       AppLauncher, Clock, conversion d'images
 └── ui/
     ├── HomeHubApp.kt            Racine : thème + fond + navigation
@@ -175,7 +229,8 @@ De même : un nouveau type de tuile dans `HomeTile`, une nouvelle cible de lance
 - [ ] Widgets : météo, agenda Google, lecture en cours (Deezer, Spotify)
 - [ ] Raccourcis NAS, Steam Link, tableau de bord personnel
 - [ ] Maison connectée
-- [ ] Assistant IA
+- [x] Télécommande téléphone avec micro intégré
+- [ ] Assistant IA (la grammaire vocale est isolée dans `VoiceCommandInterpreter`, prête à être remplacée)
 - [ ] Thèmes complets et synchronisation cloud des réglages
 - [ ] Baseline profile dédié et tests UI
 

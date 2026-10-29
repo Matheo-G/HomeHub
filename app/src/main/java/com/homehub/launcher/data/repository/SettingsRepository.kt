@@ -2,6 +2,7 @@ package com.homehub.launcher.data.repository
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -51,11 +52,16 @@ class SettingsRepository(
         dataStore.edit { it[KEY_CARD_SIZE] = cardSize.name }
     }
 
+    suspend fun setRemoteEnabled(enabled: Boolean) {
+        dataStore.edit { it[KEY_REMOTE_ENABLED] = enabled }
+    }
+
     private fun Preferences.toSettings(): LauncherSettings = LauncherSettings(
         accent = enumOrDefault(this[KEY_ACCENT], AccentColor.ELECTRIC_BLUE),
         wallpaper = enumOrDefault(this[KEY_WALLPAPER], WallpaperStyle.AURORA),
         cardSize = enumOrDefault(this[KEY_CARD_SIZE], CardSize.STANDARD),
         userName = this[KEY_USER_NAME]?.takeIf { it.isNotBlank() } ?: LauncherSettings.DEFAULT_USER_NAME,
+        remoteEnabled = this[KEY_REMOTE_ENABLED] ?: true,
     )
 
     private inline fun <reified T : Enum<T>> enumOrDefault(name: String?, default: T): T =
@@ -66,5 +72,6 @@ class SettingsRepository(
         val KEY_WALLPAPER = stringPreferencesKey("wallpaper")
         val KEY_CARD_SIZE = stringPreferencesKey("card_size")
         val KEY_USER_NAME = stringPreferencesKey("user_name")
+        val KEY_REMOTE_ENABLED = booleanPreferencesKey("remote_enabled")
     }
 }

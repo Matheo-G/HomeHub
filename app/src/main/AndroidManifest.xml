@@ -25,6 +25,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
+    <!-- Télécommande mobile : serveur sur le réseau local, publié en mDNS,
+         dans un service de premier plan relancé au démarrage de la box. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- Historique système des applications (optionnel, accordé par l'utilisateur). -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -83,5 +92,35 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <!-- Serveur de la télécommande mobile. -->
+        <service
+            android:name=".remote.RemoteControlService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <!-- « Contrôle complet » : navigation et saisie dans les autres applications. -->
+        <service
+            android:name=".remote.HomeHubAccessibilityService"
+            android:exported="false"
+            android:label="@string/accessibility_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service" />
+        </service>
+
+        <!-- Relance la télécommande au démarrage et après une mise à jour. -->
+        <receiver
+            android:name=".remote.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

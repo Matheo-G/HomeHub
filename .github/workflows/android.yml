@@ -3,10 +3,12 @@
 # À chaque push sur main (et sur demande manuelle) :
 #   1. installe Java 17 et le SDK Android 35 ;
 #   2. génère le Gradle wrapper s'il manque, puis le committe sur main ;
-#   3. compile l'APK release (signée avec la clé de développement du dépôt)
-#      et la publie comme artefact GitHub ;
-#   4. si les secrets de signature sont configurés, produit en plus une APK
-#      signée avec la clé de publication et la publie comme second artefact.
+#   3. lance les tests unitaires (grammaire vocale) ;
+#   4. compile les APK release du launcher TV et de la télécommande téléphone
+#      (signées avec la clé de développement du dépôt), publiées en artefacts ;
+#   5. si les secrets de signature sont configurés, produit aussi des APK
+#      signées avec la clé de publication ;
+#   6. sur main, met à jour la release « Dernière version » (liens directs).
 #
 # Secrets optionnels (Settings → Secrets and variables → Actions) :
 #   HOMEHUB_KEYSTORE_BASE64   keystore .jks encodé en base64
@@ -99,17 +101,22 @@ jobs:
           git commit -m "chore(build): ajoute le Gradle wrapper ${GRADLE_VERSION}"
           git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning::Wrapper non poussé (branche modifiée entre-temps)."
 
-      - name: Build release APK
+      - name: Unit tests
         run: |
           set -o pipefail
-          ./gradlew assembleRelease --stacktrace 2>&1 | tee build.log
+          ./gradlew :app:testReleaseUnitTest --stacktrace 2>&1 | tee build.log
+
+      - name: Build release APKs (TV + téléphone)
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleRelease :remote:assembleRelease --stacktrace 2>&1 | tee build.log
 
       - name: Report build errors
         if: failure()
         run: |
-          # Remonte les erreurs Gradle/Kotlin en annotations, visibles sans ouvrir les logs.
+          # Remonte les erreurs Gradle/Kotlin/tests en annotations, visibles sans ouvrir les logs.
           [ -f build.log ] || exit 0
-          grep -E "^e: |error:|What went wrong|^> |FAILURE|Could not|Unresolved|Exception|AAPT|ERROR" build.log \
+          grep -E "^e: |error:|What went wrong|^> |FAILURE|FAILED|Could not|Unresolved|Exception|AAPT|ERROR|expected" build.log \
             | grep -v "^\s*at " | awk '!seen[$0]++' | head -n 120 > errors.txt || true
           [ -s errors.txt ] || tail -n 60 build.log > errors.txt
           split -l 40 errors.txt part_
@@ -117,19 +124,25 @@ jobs:
             echo "::error title=Build ${f#part_}::$(sed 's/%/%25/g' "$f" | sed ':a;N;$!ba;s/\n/%0A/g')"
           done
 
-      - name: Prepare APK
-        id: apk
+      - name: Prepare APKs
         run: |
-          name="HomeHub-v${VERSION_NAME}-build${GITHUB_RUN_NUMBER}.apk"
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk "dist/$name"
-          echo "name=$name" >> "$GITHUB_OUTPUT"
+          cp app/build/outputs/apk/release/app-release.apk dist/HomeHub-TV.apk
+          cp remote/build/outputs/apk/release/remote-release.apk dist/HomeHub-Remote.apk
 
-      - name: Upload APK artifact
+      - name: Upload TV APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: HomeHub-release
-          path: dist/${{ steps.apk.outputs.name }}
+          path: dist/HomeHub-TV.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload phone APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HomeHub-Remote
+          path: dist/HomeHub-Remote.apk
           if-no-files-found: error
           retention-days: 90
 
@@ -139,7 +152,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.HOMEHUB_KEYSTORE_BASE64 }}
         run: echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/homehub-release.jks"
 
-      - name: Build signed release APK
+      - name: Build signed release APKs
         if: env.HAS_RELEASE_KEY == 'true'
         env:
           HOMEHUB_KEYSTORE_FILE: ${{ runner.temp }}/homehub-release.jks
@@ -147,16 +160,17 @@ jobs:
           HOMEHUB_KEY_ALIAS: ${{ secrets.HOMEHUB_KEY_ALIAS }}
           HOMEHUB_KEY_PASSWORD: ${{ secrets.HOMEHUB_KEY_PASSWORD }}
         run: |
-          ./gradlew assembleRelease --stacktrace
-          cp app/build/outputs/apk/release/app-release.apk \
-            "dist/HomeHub-v${VERSION_NAME}-build${GITHUB_RUN_NUMBER}-signed.apk"
+          ./gradlew :app:assembleRelease :remote:assembleRelease --stacktrace
+          mkdir -p dist/signed
+          cp app/build/outputs/apk/release/app-release.apk dist/signed/HomeHub-TV.apk
+          cp remote/build/outputs/apk/release/remote-release.apk dist/signed/HomeHub-Remote.apk
 
       - name: Upload signed APK artifact
         if: env.HAS_RELEASE_KEY == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: HomeHub-release-signed
-          path: dist/*-signed.apk
+          path: dist/signed/*.apk
           if-no-files-found: error
           retention-days: 90
 
@@ -164,14 +178,34 @@ jobs:
         if: always() && env.HAS_RELEASE_KEY == 'true'
         run: rm -f "$RUNNER_TEMP/homehub-release.jks"
 
+      # Publication « Dernière version » : liens de téléchargement directs et stables
+      # (…/releases/latest/download/HomeHub-Remote.apk), utilisés par le QR code de la TV.
+      - name: Publish latest release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          files="dist/HomeHub-TV.apk dist/HomeHub-Remote.apk"
+          if [ "$HAS_RELEASE_KEY" = "true" ]; then files="dist/signed/HomeHub-TV.apk dist/signed/HomeHub-Remote.apk"; fi
+          gh release delete latest --cleanup-tag --yes 2>/dev/null || true
+          gh release create latest $files \
+            --target "$GITHUB_SHA" \
+            --title "HomeHub v${VERSION_NAME} — build ${GITHUB_RUN_NUMBER}" \
+            --latest \
+            --notes "Dernière version compilée automatiquement depuis \`main\` ($(git rev-parse --short HEAD)).
+
+          - **HomeHub-TV.apk** : le launcher, à installer sur la box Android TV (Send Files to TV).
+          - **HomeHub-Remote.apk** : la télécommande, à installer sur le téléphone Android.
+
+          Les deux applications sont signées avec la même clé : chaque nouvelle version s'installe par-dessus la précédente."
+
       - name: Job summary
         run: |
           {
             echo "## HomeHub v${VERSION_NAME} — build ${GITHUB_RUN_NUMBER}"
             echo ""
-            echo "APK : **${{ steps.apk.outputs.name }}** (artefact \`HomeHub-release\`, en bas de cette page)."
-            if [ "$HAS_RELEASE_KEY" = "true" ]; then
-              echo ""
-              echo "APK signée avec la clé de publication : artefact \`HomeHub-release-signed\`."
-            fi
+            echo "- Launcher TV : artefact \`HomeHub-release\` (HomeHub-TV.apk)"
+            echo "- Télécommande téléphone : artefact \`HomeHub-Remote\` (HomeHub-Remote.apk)"
+            echo ""
+            echo "Téléchargement direct : https://github.com/${GITHUB_REPOSITORY}/releases/latest"
           } >> "$GITHUB_STEP_SUMMARY"

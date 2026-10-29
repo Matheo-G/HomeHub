@@ -13,6 +13,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.homehub.launcher.ui.components.AnimatedBackground
 import com.homehub.launcher.ui.components.ArtworkLoader
 import com.homehub.launcher.ui.components.LocalArtworkLoader
+import com.homehub.launcher.ui.components.RemoteFeedbackBanner
+import com.homehub.launcher.remote.RemoteFeedback
+import kotlinx.coroutines.flow.Flow
 import com.homehub.launcher.ui.navigation.Destination
 import com.homehub.launcher.ui.navigation.Navigator
 import com.homehub.launcher.ui.navigation.screenTransition
@@ -37,6 +40,7 @@ fun HomeHubApp(
     homeViewModel: HomeViewModel,
     settingsViewModel: SettingsViewModel,
     artworkLoader: ArtworkLoader,
+    remoteFeedback: Flow<RemoteFeedback>,
 ) {
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
 
@@ -72,6 +76,9 @@ fun HomeHubApp(
                         )
                     }
                 }
+
+                // Confirmation des commandes reçues de la télécommande mobile.
+                RemoteFeedbackBanner(events = remoteFeedback)
             }
         }
     }

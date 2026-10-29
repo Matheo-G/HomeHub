@@ -53,6 +53,12 @@ class Navigator {
         return true
     }
 
+    /** Ouvre un écran depuis l'accueil (commande vocale « paramètres »…). */
+    fun openFromHome(destination: Destination) {
+        resetToHome()
+        navigate(destination)
+    }
+
     /** Bouton Home pressé alors que HomeHub est déjà au premier plan. */
     fun resetToHome() {
         while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
