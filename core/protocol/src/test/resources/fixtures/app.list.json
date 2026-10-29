@@ -1,0 +1,20 @@
+{
+  "method": "app.list",
+  "params": {},
+  "result": {
+    "apps": [
+      {
+        "package": "com.netflix.ninja",
+        "label": "Netflix",
+        "favorite": true,
+        "tv": true
+      },
+      {
+        "package": "com.plexapp.android",
+        "label": "Plex",
+        "favorite": true,
+        "tv": true
+      }
+    ]
+  }
+}

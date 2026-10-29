@@ -1,0 +1,12 @@
+{
+  "method": "app.open",
+  "params": {
+    "package": "deezer.android.tv",
+    "intent": "playFromSearch",
+    "query": "musique relaxante"
+  },
+  "result": {
+    "opened": true,
+    "fallback": "launched"
+  }
+}

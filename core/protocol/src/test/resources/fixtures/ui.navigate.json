@@ -1,0 +1,9 @@
+{
+  "method": "ui.navigate",
+  "params": {
+    "destination": "allApps"
+  },
+  "result": {
+    "navigated": true
+  }
+}
