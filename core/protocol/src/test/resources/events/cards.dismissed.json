@@ -1,0 +1,7 @@
+{
+  "event": "cards.dismissed",
+  "params": {
+    "surfaceId": "search-1",
+    "reason": "user"
+  }
+}

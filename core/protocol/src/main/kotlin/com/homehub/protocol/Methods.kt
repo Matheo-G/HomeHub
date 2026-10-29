@@ -24,12 +24,17 @@ object Methods {
     val UiNavigate = Method("ui.navigate", NavigateParams.serializer(), NavigateResult.serializer())
     val UiToast = Method("ui.toast", ToastParams.serializer(), Empty.serializer())
 
+    val CardsShow = Method("cards.show", CardsShowParams.serializer(), CardsShowResult.serializer())
+    val CardsUpdate = Method("cards.update", CardsUpdateParams.serializer(), CardsUpdateResult.serializer())
+    val CardsDismiss = Method("cards.dismiss", CardsDismissParams.serializer(), CardsDismissResult.serializer())
+
     /** Toutes les méthodes (tests de contrat, documentation). */
     val all: List<Method<*, *>> = listOf(
         SessionHello, SessionAuth, SessionPair, SessionPing,
         InputKey, InputText,
         AppList, AppIcon, AppLaunch, AppOpen,
         UiNavigate, UiToast,
+        CardsShow, CardsUpdate, CardsDismiss,
     )
 
     /** Méthodes accessibles avant authentification. */
@@ -39,4 +44,9 @@ object Methods {
 /** Événements TV → téléphone. */
 object Events {
     val Status = Event("session.status", SessionStatus.serializer())
+    val CardAction = Event("card.action", CardActionEvent.serializer())
+    val CardsDismissed = Event("cards.dismissed", CardsDismissedEvent.serializer())
+
+    /** Tous les événements (tests de contrat). */
+    val all: List<Event<*>> = listOf(Status, CardAction, CardsDismissed)
 }

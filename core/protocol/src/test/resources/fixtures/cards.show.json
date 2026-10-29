@@ -1,0 +1,58 @@
+{
+  "method": "cards.show",
+  "params": {
+    "surface": {
+      "id": "search-1",
+      "layout": "results",
+      "title": "Interstellar",
+      "subtitle": "3 résultats",
+      "state": "done",
+      "cards": [
+        {
+          "id": "tmdb:movie:157336",
+          "kind": "video",
+          "title": "Interstellar",
+          "subtitle": "2014 · Film",
+          "body": "Des explorateurs utilisent une faille spatio-temporelle.",
+          "image": {
+            "data": "/9j/4AAQSkZJRgABAQ==",
+            "ratio": "2:3"
+          },
+          "badges": [
+            "Netflix",
+            "Prime Video"
+          ],
+          "actions": [
+            {
+              "id": "watch",
+              "label": "Regarder sur Netflix"
+            }
+          ],
+          "section": "Films et séries"
+        },
+        {
+          "id": "in:com.google.android.youtube.tv",
+          "kind": "app",
+          "title": "YouTube",
+          "subtitle": "Chercher « Interstellar »",
+          "image": {
+            "app": "com.google.android.youtube.tv",
+            "ratio": "16:9"
+          },
+          "badges": [],
+          "actions": [
+            {
+              "id": "search",
+              "label": "Chercher"
+            }
+          ],
+          "section": "Chercher dans…"
+        }
+      ],
+      "ttlMs": 120000
+    }
+  },
+  "result": {
+    "shown": true
+  }
+}

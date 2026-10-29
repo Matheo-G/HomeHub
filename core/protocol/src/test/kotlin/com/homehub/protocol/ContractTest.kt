@@ -44,6 +44,26 @@ class ContractTest {
     }
 
     @Test
+    fun everyEventHasAFixtureAndRoundTrips() {
+        val directory = File(javaClass.classLoader!!.getResource("events")!!.toURI())
+        val events = directory.listFiles { file -> file.extension == "json" }!!.associate { file ->
+            val json = JsonRpc.json.parseToJsonElement(file.readText()).jsonObject
+            json.getValue("event").jsonPrimitive.content to json.getValue("params")
+        }
+        Events.all.forEach { event ->
+            val params = events[event.name] ?: return@forEach fail("Fixture d'événement manquante : ${event.name}")
+            assertRoundTrip(event.name, event.params, params)
+        }
+    }
+
+    @Test
+    fun unknownCardKindFallsBackToGeneric() {
+        val json = JsonRpc.json.parseToJsonElement("""{"id":"x","kind":"hologram","title":"Futur"}""")
+        val card = JsonRpc.json.decodeFromJsonElement(Card.serializer(), json)
+        assertEquals(CardKind.GENERIC, card.kind)
+    }
+
+    @Test
     fun requestEnvelopeIsValidJsonRpc() {
         val text = JsonRpc.request(7, Methods.AppLaunch, LaunchParams("com.netflix.ninja"))
         val message = JsonRpc.parse(text)

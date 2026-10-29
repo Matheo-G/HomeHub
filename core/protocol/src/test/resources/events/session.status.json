@@ -1,0 +1,7 @@
+{
+  "event": "session.status",
+  "params": {
+    "fullControl": true,
+    "pairingOpen": false
+  }
+}
